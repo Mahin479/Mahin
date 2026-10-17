@@ -3,16 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Elvaren — Fragrance POS & Live Excel Order Hub</title>
+  <title>Elvaren — Enterprise Fragrance POS & Customer Hub</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <!-- FontAwesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts: Cinzel & Inter -->
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Cinzel -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- SheetJS for pure .xlsx export fallback -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -23,15 +28,16 @@
               gold: '#F59E0B',
               goldHover: '#D97706',
               goldLight: '#FEF3C7',
-              dark: '#0B0F19',
-              slate: '#0F172A',
-              card: '#1E293B',
-              cardBorder: '#334155'
+              dark: '#080C14',
+              surface: '#0E1422',
+              card: '#141C2E',
+              border: '#232E48',
+              accent: '#38BDF8'
             }
           },
           fontFamily: {
             serif: ['Cinzel', 'serif'],
-            sans: ['Inter', 'sans-serif']
+            sans: ['Plus Jakarta Sans', 'sans-serif']
           }
         }
       }
@@ -40,548 +46,835 @@
 
   <style>
     /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0b0f19;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #f59e0b;
-    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #080C14; }
+    ::-webkit-scrollbar-thumb { background: #232E48; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
 
-    /* 80mm POS Thermal Receipt Printing */
+    /* POS 80mm Print Styling */
     @media print {
-      body * {
-        visibility: hidden;
-      }
-      #printArea, #printArea * {
-        visibility: visible;
-      }
-      #printArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 80mm;
-        margin: 0;
-        padding: 4mm;
+      body * { visibility: hidden !important; }
+      #printableReceipt, #printableReceipt * { visibility: visible !important; }
+      #printableReceipt {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 80mm !important;
+        margin: 0 !important;
+        padding: 5mm !important;
         background: #ffffff !important;
         color: #000000 !important;
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 11px;
+        font-family: 'Courier New', Courier, monospace !important;
+        font-size: 11px !important;
       }
-      .no-print {
-        display: none !important;
-      }
+      .no-print { display: none !important; }
     }
   </style>
 </head>
 
 <body class="bg-brand-dark text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-gold selection:text-brand-dark">
 
-  <!-- ================= AUTHENTICATION OVERLAY (LOGIN GATE) ================= -->
-  <div id="authScreen" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300">
-    <div class="w-full max-w-md bg-brand-slate border border-brand-cardBorder rounded-2xl shadow-2xl p-6 sm:p-8 relative overflow-hidden">
-      <!-- Glow ambient backdrop -->
-      <div class="absolute -top-16 -right-16 w-44 h-44 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-16 -left-16 w-44 h-44 bg-amber-600/10 rounded-full blur-3xl pointer-events-none"></div>
+  <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+  <div id="toastStack" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-      <!-- Brand Logo in Auth -->
-      <div class="text-center mb-6">
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark font-serif font-black text-2xl shadow-lg shadow-amber-500/20 mb-3">
+  <!-- ================= AUTHENTICATION GATEWAY ================= -->
+  <div id="authScreen" class="fixed inset-0 z-50 bg-[#080C14]/95 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-brand-surface border border-brand-border rounded-3xl shadow-2xl p-8 relative overflow-hidden">
+      <div class="absolute -top-20 -right-20 w-48 h-48 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="text-center mb-8 relative">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark font-serif font-black text-2xl shadow-xl shadow-amber-500/20 mb-3">
           E
         </div>
         <h2 class="text-2xl font-serif font-bold text-white tracking-widest uppercase">Elvaren</h2>
-        <p class="text-xs text-brand-gold tracking-wide mt-0.5 uppercase">Authorized POS & Sales Terminal</p>
+        <p class="text-[11px] text-brand-gold tracking-widest uppercase font-semibold mt-0.5">Enterprise Fragrance POS & Order Hub</p>
       </div>
 
-      <!-- Error notification box -->
       <div id="authErrorAlert" class="hidden mb-4 p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-300 text-xs flex items-center gap-2.5">
         <i class="fa-solid fa-circle-exclamation text-red-400"></i>
         <span id="authErrorMsg">Invalid Login ID or Password.</span>
       </div>
 
-      <!-- Login Form -->
-      <form onsubmit="handleUserLogin(event)" class="space-y-4">
+      <form onsubmit="handleUserLogin(event)" class="space-y-4 relative">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Staff Username / ID</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Operator ID</label>
           <div class="relative">
-            <i class="fa-solid fa-user-lock absolute left-3.5 top-3 text-slate-400 text-sm"></i>
-            <input type="text" id="loginUsername" required autocomplete="username" placeholder="Enter authorized username" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition">
+            <i class="fa-solid fa-user-shield absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
+            <input type="text" id="loginUsername" required placeholder="mahinihfajsaimon" class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl pl-10 pr-3 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition shadow-inner">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Access Password</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Security Password</label>
           <div class="relative">
-            <i class="fa-solid fa-key absolute left-3.5 top-3 text-slate-400 text-sm"></i>
-            <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Enter password" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition">
-            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200">
+            <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
+            <input type="password" id="loginPassword" required placeholder="••••••••••••••••" class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition shadow-inner">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-200">
               <i id="togglePassIcon" class="fa-solid fa-eye-slash text-xs"></i>
             </button>
           </div>
         </div>
 
-        <button type="submit" class="w-full py-3 px-4 mt-2 bg-gradient-to-r from-amber-600 via-brand-gold to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-brand-dark font-bold text-sm tracking-wide rounded-xl shadow-lg shadow-amber-600/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-          <i class="fa-solid fa-right-to-bracket"></i>
-          <span>Authenticate & Open Terminal</span>
+        <button type="submit" class="w-full py-3.5 px-4 mt-2 bg-gradient-to-r from-amber-600 via-brand-gold to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-brand-dark font-extrabold text-xs tracking-wider uppercase rounded-xl shadow-lg shadow-amber-600/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+          <i class="fa-solid fa-lock-open text-xs"></i>
+          <span>Authenticate & Open Hub</span>
         </button>
       </form>
 
-      <div class="mt-5 text-center text-[11px] text-slate-400">
-        <i class="fa-solid fa-shield-halved text-amber-500/80 mr-1"></i> Private System • Offline Encrypted Storage
+      <div class="mt-6 text-center text-[10px] text-slate-500 flex items-center justify-center gap-2">
+        <span>● 100% Offline Capability</span>
+        <span>•</span>
+        <span>● Direct Excel Streaming</span>
       </div>
     </div>
   </div>
 
-  <!-- ================= TOP NAVIGATION / ACTION BAR ================= -->
-  <header class="bg-brand-slate/90 backdrop-blur-md border-b border-brand-cardBorder sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="bg-brand-surface/90 backdrop-blur-md border-b border-brand-border sticky top-0 z-40">
+    <div class="max-w-[1720px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
       
-      <!-- Brand Logo / Title -->
+      <!-- Brand & Status -->
       <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark shadow-lg shadow-amber-500/20 font-serif font-black text-lg">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark shadow-lg shadow-amber-500/20 font-serif font-black text-xl">
           E
         </div>
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-lg font-bold tracking-wider font-serif text-white uppercase">Elvaren</h1>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/70 text-emerald-400 border border-emerald-800">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-              POS Active
+              Live POS
             </span>
           </div>
-          <p class="text-[11px] text-slate-400">Order Hub & Real-time Excel Sync</p>
+          <p class="text-[11px] text-slate-400">Luxury Fragrance House & Offline Retail Hub</p>
         </div>
       </div>
 
-      <!-- Action Buttons (Desktop Excel Link, CSV fallback, Logout) -->
-      <div class="flex items-center gap-2 flex-wrap">
-        
-        <!-- DIRECT DESKTOP EXCEL LINK BUTTON -->
-        <button id="linkExcelBtn" onclick="connectDesktopExcelFile()" title="Link your local Excel/CSV file to auto-append rows directly" class="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-semibold px-3 py-1.5 rounded-lg transition duration-150 shadow-sm">
-          <span id="excelStatusIcon" class="text-sm">🔗</span>
-          <span id="excelStatusLabel">Link Desktop Excel/CSV File</span>
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-brand-dark/80 p-1 rounded-xl border border-brand-border overflow-x-auto max-w-full">
+        <button onclick="switchTab('pos')" id="tabBtn_pos" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand-gold text-brand-dark shadow-sm">
+          <i class="fa-solid fa-cash-register"></i> <span>POS Counter</span>
+        </button>
+        <button onclick="switchTab('orders')" id="tabBtn_orders" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+          <i class="fa-solid fa-receipt"></i> <span>Orders & Sales</span>
+        </button>
+        <button onclick="switchTab('inventory')" id="tabBtn_inventory" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+          <i class="fa-solid fa-boxes-stacked"></i> <span>Inventory</span>
+        </button>
+        <button onclick="switchTab('crm')" id="tabBtn_crm" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+          <i class="fa-solid fa-users"></i> <span>Customers</span>
+        </button>
+        <button onclick="switchTab('cash')" id="tabBtn_cash" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
+          <i class="fa-solid fa-vault"></i> <span>Day-End Register</span>
+        </button>
+      </nav>
+
+      <!-- System Actions (Direct Local Excel Connect & Backup) -->
+      <div class="flex items-center gap-2">
+        <button id="excelSyncBtn" onclick="connectDesktopExcelFile()" title="Stream every sale directly to a local .csv on your computer without uploads" class="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
+          <span id="excelSyncIcon">🔗</span>
+          <span id="excelSyncLabel">Connect Local Excel</span>
         </button>
 
-        <!-- Manual Backup CSV Export -->
-        <button onclick="exportToCSV()" title="Download manual backup CSV" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium px-3 py-1.5 rounded-lg transition duration-150">
-          <i class="fa-solid fa-file-excel text-emerald-400"></i>
-          <span class="hidden sm:inline">Export Backup (.CSV)</span>
+        <button onclick="exportSheetJSXlsx()" title="Download genuine Microsoft Excel (.xlsx) file" class="flex items-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
+          <i class="fa-solid fa-file-excel"></i>
+          <span class="hidden sm:inline">Export .XLSX</span>
         </button>
 
-        <!-- Logout Action -->
-        <button onclick="handleUserLogout()" title="Lock terminal and logout" class="flex items-center gap-1.5 bg-slate-900 hover:bg-red-950/60 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-800 text-xs font-medium px-2.5 py-1.5 rounded-lg transition duration-150">
-          <i class="fa-solid fa-arrow-right-from-bracket"></i>
-          <span class="hidden md:inline">Lock / Log Out</span>
+        <button onclick="handleUserLogout()" title="Lock terminal" class="flex items-center gap-1.5 bg-slate-900 hover:bg-red-950/60 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-800 text-xs font-semibold px-2.5 py-1.5 rounded-xl transition">
+          <i class="fa-solid fa-power-off"></i>
         </button>
-
       </div>
+
     </div>
   </header>
 
-  <!-- ================= MAIN CONTAINER ================= -->
-  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 flex-1 flex flex-col gap-5">
-
-    <!-- KPI / METRICS ROW -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+  <!-- ================= TOP METRICS KPI BAR ================= -->
+  <section class="max-w-[1720px] w-full mx-auto px-4 sm:px-6 pt-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      
       <!-- Total Orders Today -->
-      <div class="bg-brand-card/90 border border-brand-cardBorder rounded-xl p-3.5 shadow-sm flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today's Orders</p>
-          <h3 id="statTodayOrders" class="text-2xl font-bold text-white mt-0.5">0</h3>
-          <p class="text-[10px] text-slate-400 mt-0.5">Logged sales</p>
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Orders Today</span>
+          <span class="p-1.5 rounded-lg bg-amber-500/10 text-brand-gold text-xs"><i class="fa-solid fa-bag-shopping"></i></span>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-brand-gold text-base">
-          <i class="fa-solid fa-receipt"></i>
+        <div class="flex items-baseline gap-2 mt-1">
+          <h4 id="statTodayOrders" class="text-2xl font-black text-white">0</h4>
+          <span class="text-[10px] text-slate-500">tickets</span>
         </div>
       </div>
 
       <!-- Gross Revenue Today -->
-      <div class="bg-brand-card/90 border border-brand-cardBorder rounded-xl p-3.5 shadow-sm flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today's Revenue</p>
-          <h3 id="statTodayRevenue" class="text-2xl font-bold text-brand-gold mt-0.5">৳ 0</h3>
-          <p class="text-[10px] text-slate-400 mt-0.5">Net receipts</p>
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gross Sales</span>
+          <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs"><i class="fa-solid fa-bangladeshi-taka-sign"></i></span>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-base">
-          <i class="fa-solid fa-bangladeshi-taka-sign"></i>
+        <div class="flex items-baseline gap-1 mt-1">
+          <h4 id="statTodayRevenue" class="text-2xl font-black text-brand-gold">৳0</h4>
         </div>
       </div>
 
       <!-- Cash in Drawer -->
-      <div class="bg-brand-card/90 border border-brand-cardBorder rounded-xl p-3.5 shadow-sm flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cash in Register</p>
-          <h3 id="statCashTotal" class="text-2xl font-bold text-slate-200 mt-0.5">৳ 0</h3>
-          <p class="text-[10px] text-slate-400 mt-0.5">Physical cash drawer</p>
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cash in Hand</span>
+          <span class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-xs"><i class="fa-solid fa-money-bill-wave"></i></span>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-base">
-          <i class="fa-solid fa-money-bill-wave"></i>
+        <div class="flex items-baseline gap-1 mt-1">
+          <h4 id="statCashTotal" class="text-2xl font-black text-slate-100">৳0</h4>
         </div>
       </div>
 
-      <!-- Digital / Mobile Banking -->
-      <div class="bg-brand-card/90 border border-brand-cardBorder rounded-xl p-3.5 shadow-sm flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">bKash / Nagad / Card</p>
-          <h3 id="statDigitalTotal" class="text-2xl font-bold text-pink-400 mt-0.5">৳ 0</h3>
-          <p class="text-[10px] text-slate-400 mt-0.5">Direct merchant pay</p>
+      <!-- Mobile Banking -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">bKash / Nagad</span>
+          <span class="p-1.5 rounded-lg bg-pink-500/10 text-pink-400 text-xs"><i class="fa-solid fa-mobile-screen"></i></span>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 text-base">
-          <i class="fa-solid fa-mobile-screen-button"></i>
+        <div class="flex items-baseline gap-1 mt-1">
+          <h4 id="statDigitalTotal" class="text-2xl font-black text-pink-400">৳0</h4>
         </div>
       </div>
+
+      <!-- Card / POS Machine -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Card Settlement</span>
+          <span class="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 text-xs"><i class="fa-regular fa-credit-card"></i></span>
+        </div>
+        <div class="flex items-baseline gap-1 mt-1">
+          <h4 id="statCardTotal" class="text-2xl font-black text-purple-400">৳0</h4>
+        </div>
+      </div>
+
+      <!-- Inventory Low Stock Warning -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Low Stock SKUs</span>
+          <span id="lowStockBadgeIcon" class="p-1.5 rounded-lg bg-slate-800 text-slate-400 text-xs"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        </div>
+        <div class="flex items-baseline gap-2 mt-1">
+          <h4 id="statLowStockCount" class="text-2xl font-black text-slate-200">0</h4>
+          <span class="text-[10px] text-slate-500">bottles</span>
+        </div>
+      </div>
+
     </div>
+  </section>
 
-    <!-- MAIN TWO-PANEL INTERFACE -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+  <!-- ================= TAB CONTENT PANELS ================= -->
+  <main class="max-w-[1720px] w-full mx-auto px-4 sm:px-6 py-5 flex-1 flex flex-col">
+
+    <!-- ==================== TAB 1: POS COUNTER TERMINAL ==================== -->
+    <div id="panel_pos" class="tab-panel grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
       
-      <!-- ================= LEFT: CUSTOMER ORDER FORM (5 COLS) ================= -->
-      <div class="lg:col-span-5 bg-brand-card border border-brand-cardBorder rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/40">
+      <!-- Catalog Grid & Quick Select (7 Cols) -->
+      <div class="lg:col-span-7 bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col gap-4">
         
-        <div class="flex items-center justify-between pb-3 border-b border-brand-cardBorder mb-4">
+        <!-- Search & Filter bar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-brand-border">
           <div class="flex items-center gap-2">
-            <span class="p-1.5 bg-brand-gold/20 text-brand-gold rounded-lg text-xs">
-              <i class="fa-solid fa-cart-plus"></i>
-            </span>
-            <h2 class="text-sm font-semibold text-white tracking-wide uppercase">New Fragrance Order</h2>
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-gold animate-pulse"></span>
+            <h2 class="text-sm font-bold uppercase tracking-wider text-white">Fragrance Showcase</h2>
           </div>
-          <span id="currentDateIndicator" class="text-[11px] text-slate-400 font-mono"></span>
+          
+          <div class="flex items-center gap-2 flex-1 max-w-sm ml-auto">
+            <div class="relative w-full">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+              <input type="text" id="catalogSearchQuery" oninput="filterCatalogGrid()" placeholder="Search perfume name..." class="w-full bg-brand-dark border border-brand-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+            </div>
+            <select id="catalogCategoryFilter" onchange="filterCatalogGrid()" class="bg-brand-dark border border-brand-border rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-gold">
+              <option value="ALL">All Lines</option>
+              <option value="ATTAR">Perfume Oil / Attar</option>
+              <option value="EDP">Spray EDP Bottles</option>
+              <option value="CUSTOM">Custom Variants</option>
+            </select>
+          </div>
         </div>
 
-        <form id="orderForm" onsubmit="handleOrderSubmission(event)" class="space-y-3.5">
-          
-          <!-- 1. Customer Information Card -->
-          <div class="space-y-2.5 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-            <h3 class="text-[11px] font-bold text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-user-circle"></i> Customer Details
-            </h3>
+        <!-- Quick Size Selector Bar -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <span class="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">Default Size:</span>
+          <button type="button" onclick="setDefaultActiveSize('6ml Roll-on', 190)" class="size-pill active px-3 py-1 rounded-lg border border-brand-gold bg-brand-gold/20 text-brand-gold font-bold">6ml (৳190)</button>
+          <button type="button" onclick="setDefaultActiveSize('3ml Vial', 110)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">3ml (৳110)</button>
+          <button type="button" onclick="setDefaultActiveSize('12ml Crystal', 350)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">12ml (৳350)</button>
+          <button type="button" onclick="setDefaultActiveSize('30ml EDP', 550)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">30ml (৳550)</button>
+          <button type="button" onclick="setDefaultActiveSize('50ml EDP', 850)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">50ml (৳850)</button>
+        </div>
 
-            <div>
-              <label class="block text-[11px] font-medium text-slate-300 mb-0.5">Customer Name <span class="text-amber-500">*</span></label>
-              <input type="text" id="custName" required placeholder="e.g. Tanvir Chowdhury" class="w-full bg-slate-800/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+        <!-- Catalog Fragrance Cards Grid -->
+        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[580px] overflow-y-auto pr-1">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+        <!-- Custom Item Adder Accordion -->
+        <div class="border-t border-brand-border pt-3 mt-1">
+          <div class="flex items-center justify-between text-xs cursor-pointer text-slate-400 hover:text-brand-gold" onclick="toggleCustomItemBox()">
+            <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-plus-circle"></i> Add Bespoke / Custom Fragrance to Cart</span>
+            <i id="customItemCaret" class="fa-solid fa-chevron-down"></i>
+          </div>
+
+          <div id="customItemCollapse" class="hidden grid grid-cols-1 sm:grid-cols-12 gap-2 mt-3 p-3 bg-brand-dark/90 rounded-2xl border border-brand-border">
+            <div class="sm:col-span-5">
+              <input type="text" id="bespokeName" placeholder="Custom Fragrance Name" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+            </div>
+            <div class="sm:col-span-3">
+              <select id="bespokeSize" class="w-full bg-brand-surface border border-brand-border rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+                <option value="6ml Roll-on">6ml Roll-on</option>
+                <option value="3ml Vial">3ml Vial</option>
+                <option value="12ml Crystal">12ml Crystal</option>
+                <option value="30ml EDP">30ml EDP</option>
+                <option value="50ml EDP">50ml EDP</option>
+                <option value="Decant Sample">Decant Sample</option>
+                <option value="Gift Packaging Box">Gift Packaging Box</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <input type="number" id="bespokePrice" value="190" min="0" placeholder="Price" class="w-full bg-brand-surface border border-brand-border rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+            </div>
+            <div class="sm:col-span-2">
+              <button type="button" onclick="addBespokeItemToCart()" class="w-full bg-brand-gold hover:bg-brand-goldHover text-brand-dark font-bold py-2 rounded-xl text-xs transition">
+                + Add
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- POS Checkout & Cart Drawer (5 Cols) -->
+      <div class="lg:col-span-5 bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col justify-between">
+        
+        <div class="space-y-4">
+          <!-- Customer Profile Entry -->
+          <div class="p-3.5 bg-brand-dark/90 border border-brand-border rounded-2xl space-y-2.5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-brand-gold flex items-center gap-1.5">
+                <i class="fa-solid fa-id-card"></i> Customer Account
+              </h3>
+              <span id="quickCustomerBadge" class="text-[10px] text-slate-500">Retail Walk-in</span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label class="block text-[11px] font-medium text-slate-300 mb-0.5">Phone Number <span class="text-amber-500">*</span></label>
-                <input type="tel" id="custPhone" required placeholder="017XXXXXXXX" pattern="^(?:\+88|88)?(01[3-9]\d{8})$" title="Valid 11-digit Bangladeshi mobile number" class="w-full bg-slate-800/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+                <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Phone Number *</label>
+                <input type="tel" id="checkoutPhone" oninput="handlePhoneLookup(this.value)" placeholder="017XXXXXXXX" pattern="^(?:\+88|88)?(01[3-9]\d{8})$" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
               </div>
               <div>
-                <label class="block text-[11px] font-medium text-slate-300 mb-0.5">Delivery / Area Address</label>
-                <input type="text" id="custAddress" placeholder="e.g. Dhanmondi, Dhaka" class="w-full bg-slate-800/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+                <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Customer Name *</label>
+                <input type="text" id="checkoutName" placeholder="Customer Name" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
               </div>
+            </div>
+
+            <div>
+              <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Delivery Address / Outlet Note</label>
+              <input type="text" id="checkoutAddress" placeholder="e.g. Counter Sale / Dhanmondi, Dhaka" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
             </div>
           </div>
 
-          <!-- 2. Fragrance Selection & Cart Builder -->
-          <div class="space-y-2.5 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-            <div class="flex items-center justify-between">
-              <h3 class="text-[11px] font-bold text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-solid fa-spray-can-sparkles"></i> Select Perfume
-              </h3>
-              <span class="text-[10px] text-slate-400">Regular: ৳190</span>
-            </div>
-
-            <div class="space-y-2">
-              <div class="grid grid-cols-12 gap-2">
-                <!-- Fragrance Dropdown -->
-                <div class="col-span-7">
-                  <label class="block text-[10px] text-slate-400 mb-0.5">Perfume Line</label>
-                  <select id="itemFragranceSelect" onchange="toggleCustomPerfumeField()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
-                    <option value="Vampire Blood" data-price="190">Vampire Blood</option>
-                    <option value="Creed Aventus" data-price="190">Creed Aventus</option>
-                    <option value="ADG Profumo" data-price="190">ADG Profumo</option>
-                    <option value="Layton" data-price="190">Layton</option>
-                    <option value="Valentino" data-price="190">Valentino</option>
-                    <option value="__custom__">-- Custom Fragrance --</option>
-                  </select>
-                </div>
-
-                <!-- Bottle Size -->
-                <div class="col-span-5">
-                  <label class="block text-[10px] text-slate-400 mb-0.5">Bottle Size</label>
-                  <select id="itemBottleSize" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
-                    <option value="6ml Roll-on Attar">6ml Roll-on</option>
-                    <option value="3ml Sample Vial">3ml Sample</option>
-                    <option value="12ml Crystal Attar">12ml Crystal</option>
-                    <option value="30ml Pocket EDP">30ml Pocket</option>
-                    <option value="50ml Luxury EDP">50ml Luxury</option>
-                    <option value="Gift Box Package">Gift Box</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Custom Name Field (if __custom__ selected) -->
-              <div id="customNameWrapper" class="hidden">
-                <label class="block text-[10px] text-slate-400 mb-0.5">Enter Custom Fragrance Title</label>
-                <input type="text" id="itemCustomName" placeholder="e.g. Tom Ford Tobacco Vanille" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
-              </div>
-
-              <!-- Price, Qty and Add to Cart -->
-              <div class="grid grid-cols-12 gap-2 items-end">
-                <div class="col-span-4">
-                  <label class="block text-[10px] text-slate-400 mb-0.5">Unit (৳)</label>
-                  <input type="number" id="itemPrice" min="0" value="190" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
-                </div>
-                <div class="col-span-3">
-                  <label class="block text-[10px] text-slate-400 mb-0.5">Quantity</label>
-                  <input type="number" id="itemQty" min="1" value="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-brand-gold">
-                </div>
-                <div class="col-span-5">
-                  <button type="button" onclick="addFragranceItemToCart()" class="w-full bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/40 font-medium py-1.5 px-2 rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-plus text-[10px]"></i>
-                    <span>Add Item</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Cart Table Items -->
-            <div class="mt-2 border-t border-slate-800 pt-2">
-              <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
-                <span>Items in Order</span>
-                <span id="cartUnitsLabel" class="text-brand-gold font-medium">0 items</span>
-              </div>
-              <div id="cartItemsContainer" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                <div class="text-center py-3 text-xs text-slate-500 border border-dashed border-slate-800 rounded-lg">
-                  No items added yet. Click "+ Add Item" above.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. Payment Method & Billing -->
-          <div class="space-y-2.5 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-            <h3 class="text-[11px] font-bold text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-credit-card"></i> Payment & Totals
-            </h3>
-
-            <!-- Payment Radio Buttons -->
-            <div class="grid grid-cols-4 gap-1.5">
-              <label class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800/80 cursor-pointer hover:border-brand-gold transition duration-150 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/15">
-                <input type="radio" name="orderPayment" value="Cash" checked class="hidden">
-                <i class="fa-solid fa-money-bill-1 text-emerald-400 text-sm mb-1"></i>
-                <span class="text-[11px] font-medium text-slate-200">Cash</span>
-              </label>
-
-              <label class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800/80 cursor-pointer hover:border-brand-gold transition duration-150 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/15">
-                <input type="radio" name="orderPayment" value="bKash" class="hidden">
-                <i class="fa-solid fa-paper-plane text-pink-400 text-sm mb-1"></i>
-                <span class="text-[11px] font-medium text-slate-200">bKash</span>
-              </label>
-
-              <label class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800/80 cursor-pointer hover:border-brand-gold transition duration-150 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/15">
-                <input type="radio" name="orderPayment" value="Nagad" class="hidden">
-                <i class="fa-solid fa-bolt text-orange-400 text-sm mb-1"></i>
-                <span class="text-[11px] font-medium text-slate-200">Nagad</span>
-              </label>
-
-              <label class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800/80 cursor-pointer hover:border-brand-gold transition duration-150 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/15">
-                <input type="radio" name="orderPayment" value="Card" class="hidden">
-                <i class="fa-regular fa-credit-card text-blue-400 text-sm mb-1"></i>
-                <span class="text-[11px] font-medium text-slate-200">Card</span>
-              </label>
-            </div>
-
-            <!-- Discount & Grand Total -->
-            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800 items-center">
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">Discount (৳)</label>
-                <div class="relative">
-                  <span class="absolute left-2.5 top-1.5 text-slate-400 text-xs">৳</span>
-                  <input type="number" id="orderDiscount" min="0" value="0" oninput="calculateBillingTotals()" class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="text-[10px] text-slate-400 block">Subtotal: <span id="labelSubtotal" class="font-medium text-slate-200">৳ 0</span></span>
-                <div class="text-xs font-bold text-white mt-0.5">
-                  Grand Total: <span id="labelGrandTotal" class="text-brand-gold text-base font-bold">৳ 0</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- SUBMIT & AUTO-SYNC BUTTON -->
-          <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-amber-600 via-brand-gold to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-brand-dark font-bold text-xs tracking-wider uppercase rounded-xl shadow-lg shadow-amber-600/25 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-            <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
-            <span>Save & Log Order (Auto-Append Excel)</span>
-          </button>
-        </form>
-      </div>
-
-      <!-- ================= RIGHT: LIVE SALES LOGS & SEARCH (7 COLS) ================= -->
-      <div class="lg:col-span-7 bg-brand-card border border-brand-cardBorder rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/40 flex flex-col min-h-[620px]">
-        
-        <!-- Table Search & Header -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 border-b border-brand-cardBorder">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="p-1.5 bg-slate-800 text-brand-gold rounded-lg text-xs">
-                <i class="fa-solid fa-list-check"></i>
+          <!-- Cart Line Items -->
+          <div class="border border-brand-border rounded-2xl p-3 bg-brand-dark/50">
+            <div class="flex items-center justify-between text-xs pb-2 border-b border-brand-border">
+              <span class="font-bold text-white flex items-center gap-1.5">
+                <i class="fa-solid fa-basket-shopping text-brand-gold"></i> Order Line Items
               </span>
-              <h2 class="text-sm font-semibold text-white tracking-wide uppercase">Live Orders & Sales Feed</h2>
+              <div class="flex items-center gap-2">
+                <span id="cartTotalItemsCount" class="text-[11px] font-bold text-brand-gold">0 items</span>
+                <button type="button" onclick="clearCart()" class="text-[10px] text-slate-500 hover:text-red-400 transition">Clear</button>
+              </div>
             </div>
-            <p class="text-[11px] text-slate-400 mt-0.5">Instant local archive & desktop excel stream</p>
+
+            <div id="cartItemsList" class="space-y-1.5 max-h-48 overflow-y-auto mt-2 pr-1">
+              <div class="text-center py-6 text-xs text-slate-600 border border-dashed border-brand-border/60 rounded-xl">
+                Cart is empty. Tap any perfume card on the left.
+              </div>
+            </div>
           </div>
 
-          <!-- Dynamic Search Bar -->
-          <div class="relative w-full sm:w-60">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-            <input type="text" id="tableSearchQuery" oninput="renderOrdersTable()" placeholder="Search name, phone, ID..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+          <!-- Pricing & Calculations Box -->
+          <div class="p-3.5 bg-brand-dark/90 border border-brand-border rounded-2xl space-y-2">
+            
+            <div class="flex justify-between text-xs text-slate-400">
+              <span>Subtotal:</span>
+              <span id="calcSubtotal" class="font-bold text-slate-200">৳0</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-brand-border/60">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">Discount (Flat ৳)</label>
+                <input type="number" id="calcDiscount" value="0" min="0" oninput="recalculateTotals()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-brand-gold">
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">Delivery Fee (৳)</label>
+                <input type="number" id="calcDelivery" value="0" min="0" oninput="recalculateTotals()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-brand-gold">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-brand-border">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Net Payable:</span>
+              <span id="calcGrandTotal" class="text-xl font-black text-brand-gold font-mono">৳0</span>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="pt-2">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Payment Channel</label>
+              <div class="grid grid-cols-4 gap-1.5">
+                <button type="button" onclick="setCheckoutPayment('Cash')" class="pay-chip active p-2 rounded-xl border border-brand-gold bg-brand-gold/15 text-brand-gold text-xs font-bold flex flex-col items-center gap-1">
+                  <i class="fa-solid fa-money-bill-wave text-emerald-400 text-sm"></i>
+                  <span>Cash</span>
+                </button>
+                <button type="button" onclick="setCheckoutPayment('bKash')" class="pay-chip p-2 rounded-xl border border-brand-border bg-brand-surface text-slate-400 text-xs font-semibold flex flex-col items-center gap-1 hover:border-slate-600">
+                  <i class="fa-solid fa-paper-plane text-pink-400 text-sm"></i>
+                  <span>bKash</span>
+                </button>
+                <button type="button" onclick="setCheckoutPayment('Nagad')" class="pay-chip p-2 rounded-xl border border-brand-border bg-brand-surface text-slate-400 text-xs font-semibold flex flex-col items-center gap-1 hover:border-slate-600">
+                  <i class="fa-solid fa-bolt text-orange-400 text-sm"></i>
+                  <span>Nagad</span>
+                </button>
+                <button type="button" onclick="setCheckoutPayment('Card')" class="pay-chip p-2 rounded-xl border border-brand-border bg-brand-surface text-slate-400 text-xs font-semibold flex flex-col items-center gap-1 hover:border-slate-600">
+                  <i class="fa-regular fa-credit-card text-blue-400 text-sm"></i>
+                  <span>Card</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- Table Container -->
-        <div class="flex-1 overflow-x-auto mt-3 -mx-1">
-          <table class="w-full text-left border-collapse text-xs">
+        <!-- Big Process Order Button -->
+        <button type="button" onclick="processCheckoutOrder()" class="w-full mt-4 py-3.5 px-4 bg-gradient-to-r from-amber-600 via-brand-gold to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-brand-dark font-extrabold text-xs tracking-wider uppercase rounded-2xl shadow-xl shadow-amber-600/25 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+          <i class="fa-solid fa-print text-sm"></i>
+          <span>Save & Print 80mm Slip</span>
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 2: ORDER HISTORY & AUDIT LOG ==================== -->
+    <div id="panel_orders" class="tab-panel hidden flex-1 flex flex-col gap-4">
+      <div class="bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col flex-1">
+        
+        <!-- Search and Date Filter -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border">
+          <div>
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-receipt text-brand-gold"></i> Completed Sales & Invoices
+            </h2>
+            <p class="text-[11px] text-slate-400">All transactions stored locally and auto-streamed to Excel</p>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="relative w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+              <input type="text" id="orderLogSearch" oninput="renderOrdersLogTable()" placeholder="Search ID, customer, phone..." class="w-full bg-brand-dark border border-brand-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+            </div>
+
+            <button onclick="exportCSVOrders()" class="px-3 py-1.5 rounded-xl border border-brand-border bg-brand-dark text-slate-300 text-xs font-semibold hover:border-brand-gold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-download text-brand-gold"></i> Export CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Table View -->
+        <div class="flex-1 overflow-x-auto mt-4">
+          <table class="w-full text-left text-xs border-collapse">
             <thead>
-              <tr class="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-900/40 text-[10px]">
-                <th class="py-2.5 px-3">Order / Time</th>
-                <th class="py-2.5 px-3">Customer</th>
-                <th class="py-2.5 px-3">Fragrances</th>
-                <th class="py-2.5 px-3">Pay</th>
-                <th class="py-2.5 px-3 text-right">Total (৳)</th>
-                <th class="py-2.5 px-3 text-center">Receipt</th>
+              <tr class="border-b border-brand-border text-slate-400 font-bold uppercase text-[10px] tracking-wider bg-brand-dark/40">
+                <th class="p-3">Order ID / Time</th>
+                <th class="p-3">Customer Information</th>
+                <th class="p-3">Fragrance Breakdown</th>
+                <th class="p-3">Payment</th>
+                <th class="p-3 text-right">Net Total (৳)</th>
+                <th class="p-3 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody id="ordersTableBody" class="divide-y divide-slate-800/60 font-normal text-slate-200">
+            <tbody id="ordersLogTableBody" class="divide-y divide-brand-border/60 text-slate-200">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pt-3 border-t border-brand-border flex items-center justify-between text-[11px] text-slate-500">
+          <span id="ordersLogCount">0 orders recorded</span>
+          <span>100% Offline Persistence</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: INVENTORY MASTER ==================== -->
+    <div id="panel_inventory" class="tab-panel hidden flex-1 flex flex-col gap-4">
+      <div class="bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col flex-1">
+        
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border">
+          <div>
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-boxes-stacked text-brand-gold"></i> Inventory & Stock Controller
+            </h2>
+            <p class="text-[11px] text-slate-400">Track units, update retail prices, and manage low stock alerts</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openNewInventoryItemModal()" class="px-3.5 py-1.5 rounded-xl bg-brand-gold hover:bg-brand-goldHover text-brand-dark text-xs font-bold transition flex items-center gap-1.5 shadow-md">
+              <i class="fa-solid fa-plus"></i> Add New Fragrance SKU
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-x-auto mt-4">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-brand-border text-slate-400 font-bold uppercase text-[10px] tracking-wider bg-brand-dark/40">
+                <th class="p-3">Fragrance Name</th>
+                <th class="p-3">Category</th>
+                <th class="p-3">Sizes Available</th>
+                <th class="p-3 text-right">Unit Price (৳)</th>
+                <th class="p-3 text-center">Current Stock</th>
+                <th class="p-3 text-center">Status</th>
+                <th class="p-3 text-center">Stock Adjustment</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody" class="divide-y divide-brand-border/60 text-slate-200">
               <!-- Dynamically Populated -->
             </tbody>
           </table>
         </div>
 
-        <!-- Table Footer -->
-        <div class="pt-3 mt-auto border-t border-brand-cardBorder flex items-center justify-between text-[11px] text-slate-400">
-          <span id="recordCountLabel">Showing 0 orders</span>
-          <span class="text-slate-500 flex items-center gap-1">
-            <i class="fa-solid fa-shield-halved text-brand-gold/70"></i> 100% Client-Side Privacy
-          </span>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 4: CRM / CUSTOMER DIRECTORY ==================== -->
+    <div id="panel_crm" class="tab-panel hidden flex-1 flex flex-col gap-4">
+      <div class="bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col flex-1">
+        
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border">
+          <div>
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-users text-brand-gold"></i> Client Directory & LTV Hub
+            </h2>
+            <p class="text-[11px] text-slate-400">Customer profiles, total spent, and one-click WhatsApp contact</p>
+          </div>
+
+          <div class="w-64">
+            <input type="text" id="crmSearchQuery" oninput="renderCRMTable()" placeholder="Search client name or phone..." class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-x-auto mt-4">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-brand-border text-slate-400 font-bold uppercase text-[10px] tracking-wider bg-brand-dark/40">
+                <th class="p-3">Customer Name</th>
+                <th class="p-3">Phone Number</th>
+                <th class="p-3">Default Location</th>
+                <th class="p-3 text-center">Orders Count</th>
+                <th class="p-3 text-right">Lifetime Value (LTV)</th>
+                <th class="p-3 text-center">Customer Tier</th>
+                <th class="p-3 text-center">Quick Connect</th>
+              </tr>
+            </thead>
+            <tbody id="crmTableBody" class="divide-y divide-brand-border/60 text-slate-200">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== TAB 5: DAY-END CASH AUDIT & EXPENSE ==================== -->
+    <div id="panel_cash" class="tab-panel hidden flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      
+      <!-- Expense Entry Panel (5 Cols) -->
+      <div class="lg:col-span-5 bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-wallet text-brand-gold"></i> Petty Cash Expense Tracker
+          </h2>
+          <p class="text-[11px] text-slate-400">Log tea, snacks, courier fees, and store utilities</p>
+        </div>
+
+        <form onsubmit="handleExpenseSubmit(event)" class="space-y-3 bg-brand-dark/90 p-3.5 rounded-2xl border border-brand-border">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Expense Title / Reason *</label>
+            <input type="text" id="expenseReason" required placeholder="e.g. Courier Charge, Bottle caps, Tea" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Amount (BDT) *</label>
+              <input type="number" id="expenseAmount" required min="1" placeholder="Amount" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Paid From</label>
+              <select id="expensePaymentMethod" class="w-full bg-brand-surface border border-brand-border rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+                <option value="Cash Drawer">Cash Drawer</option>
+                <option value="bKash Merchant">bKash Merchant</option>
+                <option value="Personal Account">Personal Account</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-minus-circle"></i> Log Expense Entry
+          </button>
+        </form>
+
+        <!-- Expense Table -->
+        <div class="border border-brand-border rounded-2xl overflow-hidden max-h-56 overflow-y-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-brand-dark text-slate-400 uppercase font-bold text-[10px]">
+              <tr><th class="p-2.5">Time</th><th class="p-2.5">Reason</th><th class="p-2.5 text-right">Amount</th><th class="p-2.5"></th></tr>
+            </thead>
+            <tbody id="expensesTableBody" class="divide-y divide-brand-border/60 text-slate-300">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cash Reconciliation & Audit (7 Cols) -->
+      <div class="lg:col-span-7 bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-calculator text-brand-gold"></i> Daily Register Closing Audit
+          </h2>
+          <p class="text-[11px] text-slate-400">Match physical cash count with digital register ledger</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Opening Balance Setup -->
+          <div class="p-4 bg-brand-dark/90 border border-brand-border rounded-2xl space-y-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Opening Cash in Register</label>
+            <div class="flex items-center gap-2">
+              <span class="text-base font-bold text-brand-gold">৳</span>
+              <input type="number" id="openingCashAmount" value="500" min="0" oninput="calculateRegisterAudit()" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-brand-gold">
+            </div>
+            <p class="text-[10px] text-slate-500">Petty cash left in drawer at morning opening</p>
+          </div>
+
+          <!-- Physical Cash Count Input -->
+          <div class="p-4 bg-brand-dark/90 border border-brand-border rounded-2xl space-y-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Physical Cash Count at Night</label>
+            <div class="flex items-center gap-2">
+              <span class="text-base font-bold text-emerald-400">৳</span>
+              <input type="number" id="physicalCashCount" value="0" min="0" oninput="calculateRegisterAudit()" placeholder="Enter counted cash" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-brand-gold">
+            </div>
+            <p class="text-[10px] text-slate-500">Total paper notes & coins counted in drawer</p>
+          </div>
+        </div>
+
+        <!-- Audit Summary Calculation Sheet -->
+        <div class="p-4 bg-brand-dark/70 border border-brand-border rounded-2xl space-y-3 font-mono text-xs">
+          <div class="flex justify-between text-slate-300">
+            <span>(+) Opening Float:</span>
+            <span id="auditOpeningFloat">৳500</span>
+          </div>
+          <div class="flex justify-between text-slate-300">
+            <span>(+) Today's Cash Sales:</span>
+            <span id="auditCashSales">৳0</span>
+          </div>
+          <div class="flex justify-between text-rose-400">
+            <span>(-) Cash Expenses Paid:</span>
+            <span id="auditCashExpenses">৳0</span>
+          </div>
+          <div class="pt-2 border-t border-brand-border flex justify-between font-bold text-sm text-slate-100">
+            <span>(=) Expected Cash in Drawer:</span>
+            <span id="auditExpectedCash" class="text-brand-gold">৳500</span>
+          </div>
+          <div class="pt-1 flex justify-between font-bold text-sm">
+            <span>Variance (Difference):</span>
+            <span id="auditVariance" class="text-slate-400">৳0 (Balanced)</span>
+          </div>
         </div>
 
       </div>
 
     </div>
+
   </main>
 
-  <!-- ================= INLINE 80mm THERMAL RECEIPT AREA (PRINT ONLY) ================= -->
-  <div id="printArea" class="hidden">
-    <!-- Populated on receipt print -->
+  <!-- ================= INLINE 80mm THERMAL RECEIPT (PRINT AREA ONLY) ================= -->
+  <div id="printableReceipt" class="hidden">
+    <!-- Populated dynamically during print execution -->
   </div>
 
-  <!-- ================= MODAL: 80mm RECEIPT PREVIEW ================= -->
-  <div id="receiptModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-brand-slate border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl p-5 flex flex-col text-slate-100 relative">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <h3 class="font-serif font-bold text-sm text-brand-gold flex items-center gap-2">
-          <i class="fa-solid fa-receipt"></i> 80mm POS Thermal Slip
+  <!-- ================= MODAL: NEW INVENTORY ITEM ================= -->
+  <div id="inventoryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-brand-surface border border-brand-border w-full max-w-md rounded-3xl p-6 text-slate-100 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-brand-border mb-4">
+        <h3 class="font-bold text-sm text-brand-gold flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle"></i> Add Fragrance SKU
         </h3>
-        <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-white p-1">
+        <button onclick="closeNewInventoryItemModal()" class="text-slate-400 hover:text-white p-1">
           <i class="fa-solid fa-xmark text-base"></i>
         </button>
       </div>
 
-      <!-- White thermal paper simulation -->
-      <div id="receiptPreviewBox" class="bg-white text-black p-4 rounded-lg my-3 font-mono text-[11px] leading-relaxed shadow-inner max-h-[440px] overflow-y-auto">
-        <!-- Rendered dynamically -->
-      </div>
+      <form onsubmit="handleNewInventoryItemSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Fragrance Name *</label>
+          <input type="text" id="newSkuName" required placeholder="e.g. Dior Sauvage Elixir" class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Category</label>
+            <select id="newSkuCategory" class="w-full bg-brand-dark border border-brand-border rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+              <option value="ATTAR">Perfume Oil / Attar</option>
+              <option value="EDP">Spray EDP</option>
+              <option value="CUSTOM">Bespoke</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Default Price (৳)</label>
+            <input type="number" id="newSkuPrice" value="190" min="0" class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Initial Stock (Bottles)</label>
+          <input type="number" id="newSkuStock" value="25" min="0" class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+        </div>
 
-      <div class="flex gap-2">
-        <button onclick="printThermalReceipt()" class="flex-1 bg-brand-gold hover:bg-brand-goldHover text-brand-dark font-bold py-2.5 rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5 shadow-md">
-          <i class="fa-solid fa-print"></i>
-          <span>Print Thermal Slip</span>
+        <button type="submit" class="w-full py-3 bg-brand-gold hover:bg-brand-goldHover text-brand-dark font-extrabold text-xs uppercase tracking-wider rounded-xl transition mt-2 shadow-lg">
+          Save Fragrance to Inventory
         </button>
-        <button onclick="closeReceiptModal()" class="px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2.5 rounded-lg text-xs transition">
-          Close
-        </button>
-      </div>
+      </form>
     </div>
   </div>
 
-  <!-- ================= TOAST NOTIFICATION ================= -->
-  <div id="appToast" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-brand-gold/60 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-    <div id="toastIcon" class="text-brand-gold text-lg">
-      <i class="fa-solid fa-circle-check"></i>
-    </div>
-    <div id="toastText" class="text-xs font-medium">Operation completed.</div>
-  </div>
-
-  <!-- ================= CORE CLIENT-SIDE JAVASCRIPT ================= -->
+  <!-- ================= JAVASCRIPT APPLICATION CORE ================= -->
   <script>
-    // System Constants
-    const STORAGE_KEY = 'ELVAREN_POS_ORDERS_LOCAL_V2';
-    const AUTH_SESSION_KEY = 'ELVAREN_AUTHENTICATED_SESSION';
+    // ----------------------------------------------------
+    // SYSTEM CONSTANTS & LOCAL STORAGE KEYS
+    // ----------------------------------------------------
+    const AUTH_SESSION_KEY = 'ELVAREN_AUTH_ACTIVE_SESSION';
+    const ORDERS_STORAGE_KEY = 'ELVAREN_RETAIL_ORDERS_STORE_V3';
+    const INVENTORY_STORAGE_KEY = 'ELVAREN_INVENTORY_STOCK_STORE_V3';
+    const EXPENSES_STORAGE_KEY = 'ELVAREN_PETTY_EXPENSES_STORE_V3';
+    const CUSTOMERS_STORAGE_KEY = 'ELVAREN_CUSTOMER_PROFILES_V3';
+
     const AUTH_USER = 'mahinihfajsaimon';
     const AUTH_PASS = 'mahinihfajsaimon';
 
-    // Application State
+    // ----------------------------------------------------
+    // APPLICATION STATE
+    // ----------------------------------------------------
     let cart = [];
-    let currentReceiptOrder = null;
-    let desktopFileHandle = null; // Direct File System Access handle
+    let activeSizePreset = { size: '6ml Roll-on', price: 190 };
+    let activePaymentMethod = 'Cash';
+    let desktopFileHandle = null; // Direct File System Access API pointer
 
-    // Format BDT
-    function formatBDT(num) {
-      return new Intl.NumberFormat('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num || 0);
+    // Initial Signature Fragrance Master
+    const DEFAULT_FRAGRANCES = [
+      { id: 'FR-01', name: 'Vampire Blood', category: 'ATTAR', price: 190, stock: 45, icon: '🍷' },
+      { id: 'FR-02', name: 'Creed Aventus', category: 'ATTAR', price: 190, stock: 32, icon: '👑' },
+      { id: 'FR-03', name: 'ADG Profumo', category: 'ATTAR', price: 190, stock: 28, icon: '🌊' },
+      { id: 'FR-04', name: 'Layton', category: 'ATTAR', price: 190, stock: 24, icon: '🐎' },
+      { id: 'FR-05', name: 'Valentino', category: 'ATTAR', price: 190, stock: 30, icon: '✨' },
+      { id: 'FR-06', name: 'নিশা (Nisha)', category: 'ATTAR', price: 190, stock: 50, icon: '🌙' },
+      { id: 'FR-07', name: 'স্বপ্নিল (Shopnil)', category: 'ATTAR', price: 190, stock: 40, icon: '☁️' },
+      { id: 'FR-08', name: 'অরণ্য (Oronno)', category: 'ATTAR', price: 190, stock: 35, icon: '🌲' },
+      { id: 'FR-09', name: 'স্বপ্ন মায়া (Shopno Maya)', category: 'ATTAR', price: 190, stock: 30, icon: '🔮' },
+      { id: 'FR-10', name: "ভ্যানিল ডি'অর (Vanille D'Or)", category: 'ATTAR', price: 190, stock: 22, icon: '🍨' },
+      { id: 'FR-11', name: "অ্যাঞ্জেলস নেক্টার (Angels' Nectar)", category: 'ATTAR', price: 190, stock: 18, icon: '🍯' }
+    ];
+
+    // Web Audio Synthesizer (Zero External Assets)
+    function playBeep(type = 'success') {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'success') {
+          osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+          osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.15);
+        } else if (type === 'add') {
+          osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.08);
+        } else {
+          osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.25);
+        }
+      } catch (e) {
+        // AudioContext silent fallback
+      }
     }
 
-    // Toast Notification Utility
-    function notify(message, isError = false) {
-      const toast = document.getElementById('appToast');
-      const toastText = document.getElementById('toastText');
-      const toastIcon = document.getElementById('toastIcon');
+    // Number Formatter
+    function formatBDT(val) {
+      return new Intl.NumberFormat('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val || 0);
+    }
 
-      toastText.textContent = message;
-      if (isError) {
-        toast.className = toast.className.replace('border-brand-gold/60', 'border-red-500');
-        toastIcon.className = "text-red-400 text-lg";
-        toastIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
-      } else {
-        toast.className = toast.className.replace('border-red-500', 'border-brand-gold/60');
-        toastIcon.className = "text-brand-gold text-lg";
-        toastIcon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
-      }
-
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
+    // Toast Generator
+    function notify(message, type = 'success') {
+      const container = document.getElementById('toastStack');
+      const toast = document.createElement('div');
+      toast.className = `px-4 py-3 rounded-2xl text-xs font-bold shadow-2xl transition-all duration-300 transform translate-y-3 opacity-0 pointer-events-auto flex items-center gap-2.5 ${
+        type === 'success' 
+          ? 'bg-emerald-950/90 text-emerald-300 border border-emerald-600/60 backdrop-blur-md' 
+          : 'bg-rose-950/90 text-rose-300 border border-rose-600/60 backdrop-blur-md'
+      }`;
+      toast.innerHTML = `
+        <span class="text-sm">${type === 'success' ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-exclamation"></i>'}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
 
       setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 3000);
+        toast.classList.remove('translate-y-3', 'opacity-0');
+      }, 30);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-3');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
     }
 
-    // ================= 1. AUTHENTICATION MODULE =================
+    // ----------------------------------------------------
+    // 1. AUTHENTICATION CONTROLLER
+    // ----------------------------------------------------
     function checkAuthentication() {
-      const isAuthenticated = sessionStorage.getItem(AUTH_SESSION_KEY);
+      const isAuth = sessionStorage.getItem(AUTH_SESSION_KEY);
       const authScreen = document.getElementById('authScreen');
-      if (isAuthenticated === 'true') {
+      if (isAuth === 'true') {
         authScreen.classList.add('hidden');
       } else {
         authScreen.classList.remove('hidden');
       }
     }
 
-    function handleUserLogin(event) {
-      event.preventDefault();
+    function handleUserLogin(e) {
+      e.preventDefault();
       const u = document.getElementById('loginUsername').value.trim();
       const p = document.getElementById('loginPassword').value.trim();
-      const alertBox = document.getElementById('authErrorAlert');
-      const alertMsg = document.getElementById('authErrorMsg');
+      const errBox = document.getElementById('authErrorAlert');
 
       if (u === AUTH_USER && p === AUTH_PASS) {
         sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
-        alertBox.classList.add('hidden');
+        errBox.classList.add('hidden');
         document.getElementById('authScreen').classList.add('hidden');
-        notify("Welcome, Saimon! POS Terminal Unlocked.");
+        playBeep('success');
+        notify('Terminal Unlocked. Welcome, Mahin!');
       } else {
-        alertMsg.textContent = "Unauthorized: Invalid username or password!";
-        alertBox.classList.remove('hidden');
+        errBox.classList.remove('hidden');
+        playBeep('error');
       }
     }
 
@@ -589,37 +882,60 @@
       sessionStorage.removeItem(AUTH_SESSION_KEY);
       document.getElementById('loginUsername').value = '';
       document.getElementById('loginPassword').value = '';
-      document.getElementById('authErrorAlert').classList.add('hidden');
       document.getElementById('authScreen').classList.remove('hidden');
-      notify("Terminal locked successfully.");
+      playBeep('error');
+      notify('Terminal Locked.');
     }
 
     function togglePasswordVisibility() {
-      const passInput = document.getElementById('loginPassword');
+      const field = document.getElementById('loginPassword');
       const icon = document.getElementById('togglePassIcon');
-      if (passInput.type === 'password') {
-        passInput.type = 'text';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
+      if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
       } else {
-        passInput.type = 'password';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
+        field.type = 'password';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
       }
     }
 
-    // ================= 2. DESKTOP EXCEL FILE SYSTEM SYNC =================
+    // ----------------------------------------------------
+    // 2. NAVIGATION TAB SWITCHER
+    // ----------------------------------------------------
+    function switchTab(target) {
+      const tabs = ['pos', 'orders', 'inventory', 'crm', 'cash'];
+      tabs.forEach(t => {
+        const panel = document.getElementById(`panel_${t}`);
+        const btn = document.getElementById(`tabBtn_${t}`);
+        if (t === target) {
+          panel.classList.remove('hidden');
+          btn.className = "tab-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand-gold text-brand-dark shadow-sm";
+        } else {
+          panel.classList.add('hidden');
+          btn.className = "tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5";
+        }
+      });
+
+      if (target === 'orders') renderOrdersLogTable();
+      if (target === 'inventory') renderInventoryTable();
+      if (target === 'crm') renderCRMTable();
+      if (target === 'cash') calculateRegisterAudit();
+    }
+
+    // ----------------------------------------------------
+    // 3. DESKTOP EXCEL FILE STREAMING (File System API)
+    // ----------------------------------------------------
     async function connectDesktopExcelFile() {
       if (!('showSaveFilePicker' in window)) {
-        notify("Your browser doesn't support direct local file access. Please use Chrome or Edge.", true);
+        notify("Your browser does not support direct desktop file streaming. Use Chrome or Edge on PC.", "error");
         return;
       }
 
       try {
         desktopFileHandle = await window.showSaveFilePicker({
-          suggestedName: 'Elvaren_Fragrance_Sales_Book.csv',
+          suggestedName: 'Elvaren_Master_Sales.csv',
           types: [{
-            description: 'Microsoft Excel CSV File',
+            description: 'Microsoft Excel CSV Document',
             accept: { 'text/csv': ['.csv'], 'text/plain': ['.txt'] }
           }]
         });
@@ -627,46 +943,36 @@
         const file = await desktopFileHandle.getFile();
         const content = await file.text();
 
-        // Update UI status
-        const btn = document.getElementById('linkExcelBtn');
-        const label = document.getElementById('excelStatusLabel');
-        const icon = document.getElementById('excelStatusIcon');
+        document.getElementById('excelSyncIcon').innerText = '🟢';
+        document.getElementById('excelSyncLabel').innerText = `Linked: ${file.name}`;
+        document.getElementById('excelSyncBtn').className = "flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm";
 
-        label.textContent = `Synced: ${file.name}`;
-        icon.textContent = "🟢";
-        btn.className = "flex items-center gap-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition duration-150 shadow-sm";
-
-        // If newly created or empty file, inject UTF-8 BOM & Headers
+        // Prepend UTF-8 BOM and Header if newly created
         if (!content.trim()) {
-          const header = "Order ID,Date,Time,Customer Name,Phone Number,Delivery Address,Fragrance Items,Subtotal (BDT),Discount (BDT),Grand Total (BDT),Payment Method\n";
+          const header = "Order ID,Date,Time,Customer Name,Phone,Address,Items Breakdown,Subtotal (BDT),Discount,Delivery,Grand Total (BDT),Payment Method\n";
           const writable = await desktopFileHandle.createWritable();
           await writable.write('\uFEFF' + header);
           await writable.close();
         }
 
-        notify(`Excel File Linked! Every order will now append automatically.`);
+        playBeep('success');
+        notify(`Local Excel Linked: ${file.name}. Every order appends live!`);
       } catch (err) {
         if (err.name !== 'AbortError') {
-          console.error("File selection error:", err);
-          notify("Failed to link desktop Excel file.", true);
+          console.error(err);
+          notify("Failed to link local file.", "error");
         }
       }
     }
 
-    // Append new order directly to linked desktop Excel/CSV file
-    async function appendOrderToDesktopExcel(order) {
-      if (!desktopFileHandle) {
-        console.warn("No desktop Excel file linked. Skipping direct file write.");
-        return;
-      }
+    async function streamOrderToDesktopExcel(order) {
+      if (!desktopFileHandle) return; // Silent if user didn't choose to link
 
       try {
         const file = await desktopFileHandle.getFile();
-        const existingContent = await file.text();
+        const existing = await file.text();
+        const itemsText = order.items.map(i => `${i.name} [${i.size}] x${i.qty} (৳${i.total})`).join('; ');
 
-        const itemsFormatted = order.items.map(i => `${i.name} [${i.size}] x${i.qty} (৳${i.total})`).join('; ');
-        
-        // Single CSV row
         const row = [
           `"${order.id}"`,
           `"${order.date}"`,
@@ -674,128 +980,253 @@
           `"${order.customer.name.replace(/"/g, '""')}"`,
           `"${order.customer.phone}"`,
           `"${(order.customer.address || '').replace(/"/g, '""')}"`,
-          `"${itemsFormatted.replace(/"/g, '""')}"`,
+          `"${itemsText.replace(/"/g, '""')}"`,
           order.subtotal,
           order.discount,
+          order.delivery,
           order.grandTotal,
           `"${order.paymentMethod}"`
         ].join(',') + "\n";
 
         const writable = await desktopFileHandle.createWritable();
-        // If file was previously empty, prepend BOM
-        if (!existingContent.trim()) {
-          const header = "Order ID,Date,Time,Customer Name,Phone Number,Delivery Address,Fragrance Items,Subtotal (BDT),Discount (BDT),Grand Total (BDT),Payment Method\n";
+        if (!existing.trim()) {
+          const header = "Order ID,Date,Time,Customer Name,Phone,Address,Items Breakdown,Subtotal (BDT),Discount,Delivery,Grand Total (BDT),Payment Method\n";
           await writable.write('\uFEFF' + header + row);
         } else {
-          await writable.write(existingContent + row);
+          await writable.write(existing + row);
         }
         await writable.close();
-
-        notify(`Order row appended directly to desktop Excel!`);
+        notify("Appended live row to desktop Excel!");
       } catch (err) {
-        console.error("Direct Excel write failed:", err);
-        notify("Could not write to desktop file. Check file permissions.", true);
+        console.error("Desktop write error:", err);
       }
     }
 
-    // ================= 3. CART & ORDER LOGIC =================
-    function toggleCustomPerfumeField() {
-      const select = document.getElementById('itemFragranceSelect');
-      const wrapper = document.getElementById('customNameWrapper');
-      const priceInput = document.getElementById('itemPrice');
-
-      if (select.value === '__custom__') {
-        wrapper.classList.remove('hidden');
-        document.getElementById('itemCustomName').focus();
-        priceInput.value = 190;
-      } else {
-        wrapper.classList.add('hidden');
-        const selectedOpt = select.options[select.selectedIndex];
-        priceInput.value = selectedOpt.getAttribute('data-price') || 190;
-      }
-    }
-
-    function addFragranceItemToCart() {
-      const select = document.getElementById('itemFragranceSelect');
-      const customNameInput = document.getElementById('itemCustomName');
-      const sizeInput = document.getElementById('itemBottleSize');
-      const priceInput = document.getElementById('itemPrice');
-      const qtyInput = document.getElementById('itemQty');
-
-      let name = select.value;
-      if (name === '__custom__') {
-        name = customNameInput.value.trim();
-        if (!name) {
-          notify("Please specify the custom fragrance name.", true);
-          customNameInput.focus();
-          return;
-        }
-      }
-
-      const size = sizeInput.value;
-      const price = parseFloat(priceInput.value) || 0;
-      const qty = parseInt(qtyInput.value) || 1;
-
-      if (price < 0 || qty < 1) {
-        notify("Invalid unit price or quantity.", true);
+    // SheetJS Pure .xlsx File Export
+    function exportSheetJSXlsx() {
+      const orders = getStoredOrders();
+      if (orders.length === 0) {
+        notify("No logged orders available to export.", "error");
         return;
       }
 
-      // Check duplicate
+      const rows = orders.map(o => ({
+        "Order ID": o.id,
+        "Date": o.date,
+        "Time": o.time,
+        "Customer Name": o.customer.name,
+        "Phone Number": o.customer.phone,
+        "Delivery Area": o.customer.address,
+        "Items Summary": o.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('; '),
+        "Subtotal (BDT)": o.subtotal,
+        "Discount (BDT)": o.discount,
+        "Delivery (BDT)": o.delivery,
+        "Grand Total (BDT)": o.grandTotal,
+        "Payment Channel": o.paymentMethod
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sales Registry");
+      XLSX.writeFile(wb, `Elvaren_Sales_${new Date().toISOString().split('T')[0]}.xlsx`);
+      playBeep('success');
+      notify("Downloaded genuine .xlsx workbook!");
+    }
+
+    function exportCSVOrders() {
+      const orders = getStoredOrders();
+      if (orders.length === 0) return notify("No sales found.", "error");
+
+      let csv = '\uFEFFOrder ID,Date,Time,Customer Name,Phone,Address,Items,Subtotal,Discount,Delivery,Total,Payment\n';
+      orders.forEach(o => {
+        const items = o.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('; ');
+        csv += `"${o.id}","${o.date}","${o.time}","${o.customer.name}","${o.customer.phone}","${o.customer.address}","${items}",${o.subtotal},${o.discount},${o.delivery},${o.grandTotal},"${o.paymentMethod}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Elvaren_Sales_Backup_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    }
+
+    // ----------------------------------------------------
+    // 4. INVENTORY & CATALOG LOGIC
+    // ----------------------------------------------------
+    function getStoredInventory() {
+      const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
+      if (!raw) {
+        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(DEFAULT_FRAGRANCES));
+        return DEFAULT_FRAGRANCES;
+      }
+      return JSON.parse(raw);
+    }
+
+    function saveInventory(items) {
+      localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(items));
+      renderCatalogGrid();
+      renderInventoryTable();
+      updateTopMetrics();
+    }
+
+    function setDefaultActiveSize(size, price) {
+      activeSizePreset = { size, price };
+      document.querySelectorAll('.size-pill').forEach(btn => {
+        if (btn.innerText.includes(size.split(' ')[0])) {
+          btn.className = "size-pill active px-3 py-1 rounded-lg border border-brand-gold bg-brand-gold/20 text-brand-gold font-bold";
+        } else {
+          btn.className = "size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600";
+        }
+      });
+      renderCatalogGrid();
+    }
+
+    function renderCatalogGrid() {
+      const grid = document.getElementById('catalogGrid');
+      const query = (document.getElementById('catalogSearchQuery')?.value || '').toLowerCase();
+      const cat = document.getElementById('catalogCategoryFilter')?.value || 'ALL';
+      const inventory = getStoredInventory();
+
+      const filtered = inventory.filter(f => {
+        const nameMatch = f.name.toLowerCase().includes(query);
+        const catMatch = (cat === 'ALL') || (f.category === cat);
+        return nameMatch && catMatch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="col-span-full py-12 text-center text-xs text-slate-500">No fragrances match your filter.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => `
+        <div onclick="quickAddCatalogItemToCart('${item.name}', ${item.price}, '${item.id}')" class="group bg-brand-dark hover:bg-brand-card border border-brand-border hover:border-brand-gold/70 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-200 transform hover:-translate-y-0.5 shadow-md">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xl">${item.icon || '✨'}</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.stock <= 5 ? 'bg-rose-950/80 text-rose-400 border border-rose-800' : 'bg-slate-800 text-slate-400'}">
+                ${item.stock} left
+              </span>
+            </div>
+            <h4 class="text-xs font-bold text-white group-hover:text-brand-gold transition line-clamp-1">${item.name}</h4>
+            <p class="text-[10px] text-slate-400 mt-0.5">${activeSizePreset.size}</p>
+          </div>
+          <div class="flex items-center justify-between mt-3 pt-2 border-t border-brand-border/60">
+            <span class="font-extrabold text-xs text-slate-200 font-mono">৳${formatBDT(activeSizePreset.price)}</span>
+            <span class="w-6 h-6 rounded-lg bg-brand-gold/10 group-hover:bg-brand-gold text-brand-gold group-hover:text-brand-dark flex items-center justify-center text-xs font-bold transition">
+              <i class="fa-solid fa-plus text-[10px]"></i>
+            </span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterCatalogGrid() {
+      renderCatalogGrid();
+    }
+
+    function toggleCustomItemBox() {
+      const box = document.getElementById('customItemCollapse');
+      const caret = document.getElementById('customItemCaret');
+      box.classList.toggle('hidden');
+      caret.classList.toggle('fa-chevron-up');
+      caret.classList.toggle('fa-chevron-down');
+    }
+
+    function addBespokeItemToCart() {
+      const name = document.getElementById('bespokeName').value.trim();
+      const size = document.getElementById('bespokeSize').value;
+      const price = parseFloat(document.getElementById('bespokePrice').value) || 190;
+
+      if (!name) return notify("Enter custom fragrance name.", "error");
+
+      addItemToCartCore(name, size, price, 'CUSTOM');
+      document.getElementById('bespokeName').value = '';
+      playBeep('add');
+    }
+
+    function quickAddCatalogItemToCart(name, defaultPrice, skuId) {
+      // Use active size preset
+      addItemToCartCore(name, activeSizePreset.size, activeSizePreset.price, skuId);
+      playBeep('add');
+    }
+
+    // ----------------------------------------------------
+    // 5. CART & CHECKOUT CONTROLLER
+    // ----------------------------------------------------
+    function addItemToCartCore(name, size, price, skuId) {
       const existing = cart.find(i => i.name === name && i.size === size && i.price === price);
       if (existing) {
-        existing.qty += qty;
+        existing.qty += 1;
         existing.total = existing.qty * existing.price;
       } else {
         cart.push({
+          skuId: skuId || 'CUSTOM',
           name: name,
           size: size,
           price: price,
-          qty: qty,
-          total: price * qty
+          qty: 1,
+          total: price
         });
       }
+      renderCartDrawer();
+      recalculateTotals();
+    }
 
-      qtyInput.value = 1;
-      if (select.value === '__custom__') {
-        customNameInput.value = '';
+    function updateCartItemQty(idx, change) {
+      cart[idx].qty += change;
+      if (cart[idx].qty <= 0) {
+        cart.splice(idx, 1);
+      } else {
+        cart[idx].total = cart[idx].qty * cart[idx].price;
       }
-
-      renderCart();
-      calculateBillingTotals();
+      renderCartDrawer();
+      recalculateTotals();
     }
 
-    function removeCartItem(index) {
-      cart.splice(index, 1);
-      renderCart();
-      calculateBillingTotals();
+    function removeCartItem(idx) {
+      cart.splice(idx, 1);
+      renderCartDrawer();
+      recalculateTotals();
     }
 
-    function renderCart() {
-      const container = document.getElementById('cartItemsContainer');
-      const badge = document.getElementById('cartUnitsLabel');
-      const totalUnits = cart.reduce((sum, item) => sum + item.qty, 0);
+    function clearCart() {
+      cart = [];
+      renderCartDrawer();
+      recalculateTotals();
+    }
 
-      badge.textContent = `${totalUnits} ${totalUnits === 1 ? 'bottle' : 'bottles'}`;
+    function renderCartDrawer() {
+      const container = document.getElementById('cartItemsList');
+      const countLabel = document.getElementById('cartTotalItemsCount');
+      const totalUnits = cart.reduce((acc, i) => acc + i.qty, 0);
+
+      countLabel.innerText = `${totalUnits} ${totalUnits === 1 ? 'bottle' : 'bottles'}`;
 
       if (cart.length === 0) {
         container.innerHTML = `
-          <div class="text-center py-3 text-xs text-slate-500 border border-dashed border-slate-800 rounded-lg">
-            No items added yet. Click "+ Add Item" above.
+          <div class="text-center py-6 text-xs text-slate-600 border border-dashed border-brand-border/60 rounded-xl">
+            Cart is empty. Tap any perfume card on the left.
           </div>
         `;
         return;
       }
 
       container.innerHTML = cart.map((item, idx) => `
-        <div class="flex items-center justify-between bg-slate-800/80 p-2 rounded-lg border border-slate-700/60 text-xs">
-          <div class="overflow-hidden pr-2">
-            <span class="font-semibold text-slate-100 truncate block">${item.name}</span>
-            <span class="text-[10px] text-brand-gold">${item.size} • ৳${formatBDT(item.price)} × ${item.qty}</span>
+        <div class="flex items-center justify-between bg-brand-surface p-2 rounded-xl border border-brand-border text-xs">
+          <div class="max-w-[55%]">
+            <span class="font-bold text-white block truncate">${item.name}</span>
+            <span class="text-[10px] text-brand-gold">${item.size} • ৳${formatBDT(item.price)}</span>
           </div>
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <span class="font-bold text-white font-mono">৳${formatBDT(item.total)}</span>
-            <button type="button" onclick="removeCartItem(${idx})" class="text-slate-400 hover:text-red-400 p-1">
+
+          <div class="flex items-center gap-2">
+            <div class="flex items-center border border-brand-border rounded-lg bg-brand-dark">
+              <button onclick="updateCartItemQty(${idx}, -1)" class="px-2 py-0.5 text-slate-400 hover:text-white font-bold">-</button>
+              <span class="px-2 text-white font-mono font-bold">${item.qty}</span>
+              <button onclick="updateCartItemQty(${idx}, 1)" class="px-2 py-0.5 text-slate-400 hover:text-white font-bold">+</button>
+            </div>
+            <span class="font-bold text-slate-100 font-mono w-14 text-right">৳${formatBDT(item.total)}</span>
+            <button onclick="removeCartItem(${idx})" class="text-slate-500 hover:text-rose-400 p-1">
               <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
           </div>
@@ -803,243 +1234,170 @@
       `).join('');
     }
 
-    function calculateBillingTotals() {
-      const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
-      const discountInput = document.getElementById('orderDiscount');
+    function recalculateTotals() {
+      const subtotal = cart.reduce((acc, i) => acc + i.total, 0);
+      const discountInput = document.getElementById('calcDiscount');
+      const deliveryInput = document.getElementById('calcDelivery');
+
       let discount = parseFloat(discountInput.value) || 0;
+      let delivery = parseFloat(deliveryInput.value) || 0;
 
       if (discount > subtotal) {
         discount = subtotal;
         discountInput.value = discount;
       }
 
-      const grandTotal = Math.max(0, subtotal - discount);
+      const grandTotal = Math.max(0, subtotal - discount + delivery);
 
-      document.getElementById('labelSubtotal').textContent = `৳ ${formatBDT(subtotal)}`;
-      document.getElementById('labelGrandTotal').textContent = `৳ ${formatBDT(grandTotal)}`;
+      document.getElementById('calcSubtotal').innerText = `৳${formatBDT(subtotal)}`;
+      document.getElementById('calcGrandTotal').innerText = `৳${formatBDT(grandTotal)}`;
     }
 
-    // ================= 4. ORDER SUBMISSION & LOCALSTORAGE =================
-    function getStoredOrders() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
+    function setCheckoutPayment(method) {
+      activePaymentMethod = method;
+      document.querySelectorAll('.pay-chip').forEach(chip => {
+        if (chip.innerText.includes(method)) {
+          chip.className = "pay-chip active p-2 rounded-xl border border-brand-gold bg-brand-gold/15 text-brand-gold text-xs font-bold flex flex-col items-center gap-1";
+        } else {
+          chip.className = "pay-chip p-2 rounded-xl border border-brand-border bg-brand-surface text-slate-400 text-xs font-semibold flex flex-col items-center gap-1 hover:border-slate-600";
+        }
+      });
+    }
+
+    function handlePhoneLookup(phone) {
+      if (phone.length >= 10) {
+        const customers = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY) || '[]');
+        const match = customers.find(c => c.phone.includes(phone));
+        if (match) {
+          document.getElementById('checkoutName').value = match.name;
+          document.getElementById('checkoutAddress').value = match.address || '';
+          document.getElementById('quickCustomerBadge').innerText = `VIP Client (${match.totalOrders} past orders)`;
+          document.getElementById('quickCustomerBadge').className = "text-[10px] text-brand-gold font-bold";
+        }
       }
     }
 
-    function saveOrdersList(orders) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-      renderOrdersTable();
-      updateMetrics();
-    }
+    async function processCheckoutOrder() {
+      const phone = document.getElementById('checkoutPhone').value.trim();
+      const name = document.getElementById('checkoutName').value.trim();
+      const address = document.getElementById('checkoutAddress').value.trim();
 
-    async function handleOrderSubmission(event) {
-      event.preventDefault();
-
+      if (!phone || !name) {
+        playBeep('error');
+        return notify("Customer Name and Phone Number are required!", "error");
+      }
       if (cart.length === 0) {
-        notify("Please add at least one perfume to the order.", true);
-        return;
+        playBeep('error');
+        return notify("Cart is empty! Add at least one fragrance.", "error");
       }
 
-      const custName = document.getElementById('custName').value.trim();
-      const custPhone = document.getElementById('custPhone').value.trim();
-      const custAddress = document.getElementById('custAddress').value.trim();
-      const paymentMethod = document.querySelector('input[name="orderPayment"]:checked').value;
-      const discount = parseFloat(document.getElementById('orderDiscount').value) || 0;
-      
-      const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
-      const grandTotal = Math.max(0, subtotal - discount);
+      const subtotal = cart.reduce((acc, i) => acc + i.total, 0);
+      const discount = parseFloat(document.getElementById('calcDiscount').value) || 0;
+      const delivery = parseFloat(document.getElementById('calcDelivery').value) || 0;
+      const grandTotal = Math.max(0, subtotal - discount + delivery);
 
       const now = new Date();
       const orderId = `ELV-${Math.floor(1000 + Math.random() * 9000)}`;
-      const dateStr = now.toLocaleDateString('en-GB');
-      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-      const newOrder = {
+      const orderRecord = {
         id: orderId,
         timestamp: now.toISOString(),
-        date: dateStr,
-        time: timeStr,
+        date: now.toLocaleDateString('en-GB'),
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
         customer: {
-          name: custName,
-          phone: custPhone,
-          address: custAddress || 'Store Counter Sale'
+          name: name,
+          phone: phone,
+          address: address || 'Store Counter Sale'
         },
         items: [...cart],
         subtotal: subtotal,
         discount: discount,
+        delivery: delivery,
         grandTotal: grandTotal,
-        paymentMethod: paymentMethod
+        paymentMethod: activePaymentMethod
       };
 
-      // 1. Save to browser LocalStorage
+      // 1. Save to Local Orders
       const orders = getStoredOrders();
-      orders.unshift(newOrder);
-      saveOrdersList(orders);
+      orders.unshift(orderRecord);
+      localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
 
-      // 2. Automatically write directly to desktop Excel file (if linked)
-      await appendOrderToDesktopExcel(newOrder);
+      // 2. Reduce Stock in Inventory
+      deductInventoryStock(orderRecord.items);
 
-      // 3. Reset order entry form
-      document.getElementById('orderForm').reset();
-      cart = [];
-      renderCart();
-      calculateBillingTotals();
-      document.getElementById('itemFragranceSelect').value = 'Vampire Blood';
-      document.getElementById('itemPrice').value = '190';
-      toggleCustomPerfumeField();
+      // 3. Update Customer CRM Profile
+      upsertCustomerProfile(orderRecord.customer, grandTotal);
 
-      notify(`Order ${orderId} logged successfully!`);
+      // 4. Stream directly to desktop Excel CSV file
+      await streamOrderToDesktopExcel(orderRecord);
 
-      // 4. Open 80mm POS Thermal Slip Preview
-      openReceiptModal(orderId);
+      // 5. Sound and Toast
+      playBeep('success');
+      notify(`Order ${orderId} finalized! Printing 80mm slip...`);
+
+      // 6. Generate and Print Thermal Slip
+      triggerThermalPrint(orderRecord);
+
+      // 7. Reset Form
+      clearCart();
+      document.getElementById('checkoutPhone').value = '';
+      document.getElementById('checkoutName').value = '';
+      document.getElementById('checkoutAddress').value = '';
+      document.getElementById('calcDiscount').value = '0';
+      document.getElementById('calcDelivery').value = '0';
+      document.getElementById('quickCustomerBadge').innerText = "Retail Walk-in";
+      document.getElementById('quickCustomerBadge').className = "text-[10px] text-slate-500";
+
+      updateTopMetrics();
+      renderOrdersLogTable();
     }
 
-    // ================= 5. METRICS & SALES FEED TABLE =================
-    function updateMetrics() {
-      const orders = getStoredOrders();
-      const todayString = new Date().toDateString();
-
-      let count = 0;
-      let revenue = 0;
-      let cash = 0;
-      let digital = 0;
-
-      orders.forEach(o => {
-        if (new Date(o.timestamp).toDateString() === todayString) {
-          count++;
-          revenue += o.grandTotal;
-          if (o.paymentMethod === 'Cash') {
-            cash += o.grandTotal;
-          } else {
-            digital += o.grandTotal;
-          }
-        }
-      });
-
-      document.getElementById('statTodayOrders').textContent = count;
-      document.getElementById('statTodayRevenue').textContent = `৳ ${formatBDT(revenue)}`;
-      document.getElementById('statCashTotal').textContent = `৳ ${formatBDT(cash)}`;
-      document.getElementById('statDigitalTotal').textContent = `৳ ${formatBDT(digital)}`;
-    }
-
-    function renderOrdersTable() {
-      const orders = getStoredOrders();
-      const query = (document.getElementById('tableSearchQuery').value || '').toLowerCase().trim();
-      const tableBody = document.getElementById('ordersTableBody');
-      const countLabel = document.getElementById('recordCountLabel');
-
-      const filtered = orders.filter(o => {
-        if (!query) return true;
-        const nameMatch = o.customer.name.toLowerCase().includes(query);
-        const phoneMatch = o.customer.phone.includes(query);
-        const idMatch = o.id.toLowerCase().includes(query);
-        const itemMatch = o.items.some(i => i.name.toLowerCase().includes(query));
-        return nameMatch || phoneMatch || idMatch || itemMatch;
-      });
-
-      countLabel.textContent = `Showing ${filtered.length} of ${orders.length} orders`;
-
-      if (filtered.length === 0) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="6" class="text-center py-8 text-slate-500">
-              <i class="fa-solid fa-receipt text-2xl mb-1 text-slate-600 block"></i>
-              No orders found matching query.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tableBody.innerHTML = filtered.map(order => {
-        const itemsSummary = order.items.map(i => `${i.name} (x${i.qty})`).join(', ');
-
-        let payClass = 'bg-slate-800 text-slate-300 border-slate-700';
-        if (order.paymentMethod === 'Cash') payClass = 'bg-emerald-950/60 text-emerald-400 border-emerald-800';
-        else if (order.paymentMethod === 'bKash') payClass = 'bg-pink-950/60 text-pink-400 border-pink-800';
-        else if (order.paymentMethod === 'Nagad') payClass = 'bg-orange-950/60 text-orange-400 border-orange-800';
-        else if (order.paymentMethod === 'Card') payClass = 'bg-blue-950/60 text-blue-400 border-blue-800';
-
-        return `
-          <tr class="hover:bg-slate-800/40 transition duration-150">
-            <td class="py-2.5 px-3 whitespace-nowrap">
-              <span class="font-mono font-bold text-brand-gold">${order.id}</span>
-              <div class="text-[10px] text-slate-400">${order.date}, ${order.time}</div>
-            </td>
-            <td class="py-2.5 px-3">
-              <div class="font-semibold text-slate-100">${order.customer.name}</div>
-              <div class="text-[10px] text-slate-400">${order.customer.phone}</div>
-            </td>
-            <td class="py-2.5 px-3 max-w-[190px]">
-              <div class="truncate text-slate-300 text-[11px]" title="${itemsSummary}">${itemsSummary}</div>
-            </td>
-            <td class="py-2.5 px-3 whitespace-nowrap">
-              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${payClass}">
-                ${order.paymentMethod}
-              </span>
-            </td>
-            <td class="py-2.5 px-3 text-right whitespace-nowrap">
-              <span class="font-bold text-white font-mono text-xs">৳${formatBDT(order.grandTotal)}</span>
-            </td>
-            <td class="py-2.5 px-3 text-center whitespace-nowrap">
-              <button onclick="openReceiptModal('${order.id}')" title="Print 80mm POS Slip" class="p-1.5 rounded-md bg-slate-800 hover:bg-brand-gold hover:text-brand-dark text-slate-300 transition duration-150">
-                <i class="fa-solid fa-print"></i>
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    // ================= 6. 80mm RECEIPT MODAL & PRINTING =================
-    function buildReceiptHTML(order) {
-      const itemRows = order.items.map(item => `
-        <div style="display:flex; justify-content:space-between; margin-bottom: 3px;">
-          <div style="max-width: 65%;">
-            <strong>${item.name}</strong><br>
-            <span style="font-size:10px; color:#444;">${item.size} (${item.qty} × ৳${item.price})</span>
+    // ----------------------------------------------------
+    // 6. 80mm THERMAL RECEIPT ENGINE
+    // ----------------------------------------------------
+    function triggerThermalPrint(order) {
+      const printBox = document.getElementById('printableReceipt');
+      
+      const itemRows = order.items.map(i => `
+        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
+          <div style="max-width:70%;">
+            <b>${i.name}</b><br>
+            <span style="font-size:9px; color:#333;">${i.size} (${i.qty} x ৳${formatBDT(i.price)})</span>
           </div>
-          <div style="text-align:right;">
-            <strong>৳${formatBDT(item.total)}</strong>
+          <div style="text-align:right; font-weight:bold;">
+            ৳${formatBDT(i.total)}
           </div>
         </div>
       `).join('');
 
-      return `
-        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
-          <h2 style="font-size: 16px; font-weight: bold; margin: 0; text-transform: uppercase; letter-spacing: 1.5px;">ELVAREN</h2>
-          <p style="font-size: 10px; margin: 2px 0;">Artisanal Perfumes & Attar Oils</p>
-          <p style="font-size: 10px; margin: 0;">Outlet POS & Sales Hub</p>
+      printBox.innerHTML = `
+        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
+          <h2 style="font-size: 16px; font-weight: bold; margin: 0; letter-spacing: 2px;">ELVAREN</h2>
+          <p style="margin: 1px 0; font-size: 10px;">Artisanal Perfumery & Pure Attars</p>
+          <p style="margin: 0; font-size: 9px;">Hotline: 01863680414</p>
         </div>
 
-        <div style="font-size: 11px; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 6px;">
+        <div style="font-size: 10px; margin-bottom: 6px; border-bottom: 1px dashed #000; padding-bottom: 6px;">
           <div style="display:flex; justify-content:space-between;">
-            <span>Inv #: <strong>${order.id}</strong></span>
-            <span>${order.time}</span>
+            <span>Inv: <b>${order.id}</b></span>
+            <span>${order.date} ${order.time}</span>
           </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span>Date: ${order.date}</span>
-            <span>Pay: <strong>${order.paymentMethod}</strong></span>
-          </div>
-          <div style="margin-top: 4px;">
-            <span>Customer: <strong>${order.customer.name}</strong></span><br>
+          <div style="margin-top: 3px;">
+            <span>Customer: <b>${order.customer.name}</b></span><br>
             <span>Phone: ${order.customer.phone}</span><br>
-            <span>Address: ${order.customer.address}</span>
+            <span>Destination: ${order.customer.address}</span>
           </div>
         </div>
 
         <div style="border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
-          <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11px; margin-bottom:4px;">
-            <span>Fragrance Item</span>
+          <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:10px; margin-bottom:4px;">
+            <span>Description</span>
             <span>Total</span>
           </div>
           ${itemRows}
         </div>
 
-        <div style="font-size: 11px; line-height: 1.4; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 6px;">
+        <div style="font-size: 10px; line-height: 1.4; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
           <div style="display:flex; justify-content:space-between;">
             <span>Subtotal:</span>
             <span>৳${formatBDT(order.subtotal)}</span>
@@ -1049,119 +1407,549 @@
             <span>Discount:</span>
             <span>- ৳${formatBDT(order.discount)}</span>
           </div>` : ''}
+          ${order.delivery > 0 ? `
+          <div style="display:flex; justify-content:space-between;">
+            <span>Delivery:</span>
+            <span>+ ৳${formatBDT(order.delivery)}</span>
+          </div>` : ''}
           <div style="display:flex; justify-content:space-between; font-size: 13px; font-weight: bold; margin-top: 4px;">
-            <span>Grand Total:</span>
+            <span>Payable:</span>
             <span>৳${formatBDT(order.grandTotal)}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size: 9px; margin-top: 2px;">
+            <span>Payment Method:</span>
+            <span><b>${order.paymentMethod}</b></span>
           </div>
         </div>
 
-        <div style="text-align: center; font-size: 10px; color: #444;">
-          <p style="margin: 2px 0;">* Thank you for choosing Elvaren *</p>
-          <p style="margin: 2px 0;">Store perfume in a cool & dark environment.</p>
+        <!-- Simulated Barcode -->
+        <div style="text-align: center; margin: 6px 0;">
+          <svg style="width: 140px; height: 35px; margin: 0 auto;" viewBox="0 0 140 35">
+            <rect width="140" height="35" fill="#fff" />
+            <g fill="#000">
+              <rect x="5" y="0" width="3" height="30" />
+              <rect x="11" y="0" width="2" height="30" />
+              <rect x="16" y="0" width="4" height="30" />
+              <rect x="23" y="0" width="1" height="30" />
+              <rect x="27" y="0" width="3" height="30" />
+              <rect x="33" y="0" width="2" height="30" />
+              <rect x="38" y="0" width="5" height="30" />
+              <rect x="46" y="0" width="2" height="30" />
+              <rect x="51" y="0" width="3" height="30" />
+              <rect x="57" y="0" width="4" height="30" />
+              <rect x="64" y="0" width="1" height="30" />
+              <rect x="68" y="0" width="3" height="30" />
+              <rect x="74" y="0" width="2" height="30" />
+              <rect x="79" y="0" width="4" height="30" />
+              <rect x="86" y="0" width="3" height="30" />
+              <rect x="92" y="0" width="1" height="30" />
+              <rect x="96" y="0" width="4" height="30" />
+              <rect x="103" y="0" width="2" height="30" />
+              <rect x="108" y="0" width="3" height="30" />
+              <rect x="114" y="0" width="2" height="30" />
+              <rect x="119" y="0" width="4" height="30" />
+              <rect x="126" y="0" width="2" height="30" />
+              <rect x="131" y="0" width="3" height="30" />
+            </g>
+          </svg>
+          <div style="font-size: 8px; font-family: monospace;">* ${order.id} *</div>
+        </div>
+
+        <div style="text-align: center; font-size: 9px; color: #333;">
+          <p style="margin: 2px 0;">* Pure Concentration • Long Lasting *</p>
+          <p style="margin: 1px 0;">Keep away from direct heat and sunlight.</p>
+          <p style="margin: 1px 0;">Thank you for shopping with Elvaren!</p>
         </div>
       `;
-    }
 
-    function openReceiptModal(orderId) {
-      const orders = getStoredOrders();
-      const order = orders.find(o => o.id === orderId);
-      if (!order) return;
-
-      currentReceiptOrder = order;
-      document.getElementById('receiptPreviewBox').innerHTML = buildReceiptHTML(order);
-      document.getElementById('receiptModal').classList.remove('hidden');
-    }
-
-    function closeReceiptModal() {
-      document.getElementById('receiptModal').classList.add('hidden');
-      currentReceiptOrder = null;
-    }
-
-    function printThermalReceipt() {
-      if (!currentReceiptOrder) return;
-      const printArea = document.getElementById('printArea');
-      printArea.innerHTML = buildReceiptHTML(currentReceiptOrder);
-      printArea.classList.remove('hidden');
-
+      printBox.classList.remove('hidden');
       window.print();
-
-      setTimeout(() => {
-        printArea.classList.add('hidden');
-      }, 500);
+      printBox.classList.add('hidden');
     }
 
-    // ================= 7. MANUAL EXCEL CSV EXPORT FALLBACK =================
-    function exportToCSV() {
+    // ----------------------------------------------------
+    // 7. ORDER HISTORY & AUDIT LOG TABLE
+    // ----------------------------------------------------
+    function getStoredOrders() {
+      try {
+        const raw = localStorage.getItem(ORDERS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function renderOrdersLogTable() {
       const orders = getStoredOrders();
-      if (orders.length === 0) {
-        notify("No order records to export.", true);
+      const query = (document.getElementById('orderLogSearch')?.value || '').toLowerCase().trim();
+      const tbody = document.getElementById('ordersLogTableBody');
+      const countEl = document.getElementById('ordersLogCount');
+
+      const filtered = orders.filter(o => {
+        if (!query) return true;
+        return o.id.toLowerCase().includes(query) ||
+               o.customer.name.toLowerCase().includes(query) ||
+               o.customer.phone.includes(query);
+      });
+
+      countEl.innerText = `Showing ${filtered.length} of ${orders.length} orders`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 text-xs">No orders found matching search criteria.</td></tr>`;
         return;
       }
 
-      const headers = ["Order ID", "Date", "Time", "Customer Name", "Customer Phone", "Delivery Address", "Fragrance Items", "Subtotal (BDT)", "Discount (BDT)", "Grand Total (BDT)", "Payment Method"];
+      tbody.innerHTML = filtered.map(order => {
+        const itemsSummary = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ');
 
-      const rows = orders.map(order => {
-        const itemsStr = order.items.map(i => `${i.name} [${i.size}] x${i.qty} (৳${i.total})`).join('; ');
-        return [
-          `"${order.id}"`,
-          `"${order.date}"`,
-          `"${order.time}"`,
-          `"${order.customer.name.replace(/"/g, '""')}"`,
-          `"${order.customer.phone}"`,
-          `"${(order.customer.address || '').replace(/"/g, '""')}"`,
-          `"${itemsStr.replace(/"/g, '""')}"`,
-          order.subtotal,
-          order.discount,
-          order.grandTotal,
-          `"${order.paymentMethod}"`
-        ];
-      });
+        let payBadge = 'bg-slate-800 text-slate-300 border-slate-700';
+        if (order.paymentMethod === 'Cash') payBadge = 'bg-emerald-950 text-emerald-400 border-emerald-800';
+        if (order.paymentMethod === 'bKash') payBadge = 'bg-pink-950 text-pink-400 border-pink-800';
+        if (order.paymentMethod === 'Nagad') payBadge = 'bg-orange-950 text-orange-400 border-orange-800';
+        if (order.paymentMethod === 'Card') payBadge = 'bg-blue-950 text-blue-400 border-blue-800';
 
-      const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join("\r\n");
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `Elvaren_Orders_Backup_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      notify("Manual CSV exported successfully!");
+        return `
+          <tr class="hover:bg-brand-dark/40 transition">
+            <td class="p-3 whitespace-nowrap">
+              <span class="font-mono font-bold text-brand-gold">${order.id}</span>
+              <div class="text-[10px] text-slate-500">${order.date}, ${order.time}</div>
+            </td>
+            <td class="p-3">
+              <div class="font-bold text-white">${order.customer.name}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${order.customer.phone}</div>
+            </td>
+            <td class="p-3 max-w-[220px]">
+              <div class="truncate text-slate-300 text-[11px]" title="${itemsSummary}">${itemsSummary}</div>
+            </td>
+            <td class="p-3 whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${payBadge}">
+                ${order.paymentMethod}
+              </span>
+            </td>
+            <td class="p-3 text-right whitespace-nowrap font-bold text-white font-mono">
+              ৳${formatBDT(order.grandTotal)}
+            </td>
+            <td class="p-3 text-center whitespace-nowrap">
+              <div class="flex items-center justify-center gap-1.5">
+                <button onclick='triggerThermalPrint(${JSON.stringify(order)})' title="Re-Print Thermal Slip" class="p-1.5 bg-brand-dark hover:bg-brand-card border border-brand-border text-amber-400 rounded-lg transition">
+                  <i class="fa-solid fa-print"></i>
+                </button>
+                <button onclick="cancelAndRefundOrder('${order.id}')" title="Cancel & Delete Order" class="p-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-400 rounded-lg transition">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    // Initialize Default Demo Data if fresh
-    function seedInitialData() {
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        const sampleOrders = [
+    function cancelAndRefundOrder(orderId) {
+      if (!confirm(`Are you sure you want to Cancel and Delete Order ${orderId}? This will restore stock counts and recalculate sales.`)) {
+        return;
+      }
+
+      let orders = getStoredOrders();
+      const target = orders.find(o => o.id === orderId);
+
+      if (target) {
+        // Restore stock
+        restoreInventoryStock(target.items);
+      }
+
+      orders = orders.filter(o => o.id !== orderId);
+      localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+
+      playBeep('error');
+      notify(`Order ${orderId} was cancelled & deleted.`, 'error');
+
+      renderOrdersLogTable();
+      updateTopMetrics();
+      renderInventoryTable();
+    }
+
+    // ----------------------------------------------------
+    // 8. INVENTORY MANAGEMENT TABLE & MODAL
+    // ----------------------------------------------------
+    function renderInventoryTable() {
+      const inventory = getStoredInventory();
+      const tbody = document.getElementById('inventoryTableBody');
+
+      tbody.innerHTML = inventory.map(item => `
+        <tr class="hover:bg-brand-dark/40 transition">
+          <td class="p-3 font-bold text-white flex items-center gap-2">
+            <span>${item.icon || '✨'}</span>
+            <span>${item.name}</span>
+          </td>
+          <td class="p-3 text-slate-400">${item.category}</td>
+          <td class="p-3 text-slate-300 text-[11px]">3ml, 6ml, 12ml, 30ml, 50ml</td>
+          <td class="p-3 text-right font-mono font-bold text-brand-gold">৳${formatBDT(item.price)}</td>
+          <td class="p-3 text-center font-bold font-mono text-sm ${item.stock <= 5 ? 'text-rose-400' : 'text-slate-200'}">
+            ${item.stock}
+          </td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.stock <= 5 ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+              ${item.stock <= 5 ? 'Low Stock' : 'In Stock'}
+            </span>
+          </td>
+          <td class="p-3 text-center">
+            <div class="flex items-center justify-center gap-1">
+              <button onclick="adjustStockUnit('${item.id}', -5)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-slate-300 hover:text-white">-5</button>
+              <button onclick="adjustStockUnit('${item.id}', -1)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-slate-300 hover:text-white">-1</button>
+              <button onclick="adjustStockUnit('${item.id}', 1)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-brand-gold font-bold hover:text-yellow-300">+1</button>
+              <button onclick="adjustStockUnit('${item.id}', 10)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-brand-gold font-bold hover:text-yellow-300">+10</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function adjustStockUnit(id, delta) {
+      const inventory = getStoredInventory();
+      const item = inventory.find(i => i.id === id);
+      if (item) {
+        item.stock = Math.max(0, item.stock + delta);
+        saveInventory(inventory);
+        playBeep('add');
+      }
+    }
+
+    function deductInventoryStock(cartItems) {
+      const inventory = getStoredInventory();
+      cartItems.forEach(cartItem => {
+        const match = inventory.find(i => i.name === cartItem.name || i.id === cartItem.skuId);
+        if (match) {
+          match.stock = Math.max(0, match.stock - cartItem.qty);
+        }
+      });
+      saveInventory(inventory);
+    }
+
+    function restoreInventoryStock(cartItems) {
+      const inventory = getStoredInventory();
+      cartItems.forEach(cartItem => {
+        const match = inventory.find(i => i.name === cartItem.name || i.id === cartItem.skuId);
+        if (match) {
+          match.stock += cartItem.qty;
+        }
+      });
+      saveInventory(inventory);
+    }
+
+    function openNewInventoryItemModal() {
+      document.getElementById('inventoryModal').classList.remove('hidden');
+    }
+
+    function closeNewInventoryItemModal() {
+      document.getElementById('inventoryModal').classList.add('hidden');
+    }
+
+    function handleNewInventoryItemSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('newSkuName').value.trim();
+      const category = document.getElementById('newSkuCategory').value;
+      const price = parseFloat(document.getElementById('newSkuPrice').value) || 190;
+      const stock = parseInt(document.getElementById('newSkuStock').value) || 20;
+
+      const inventory = getStoredInventory();
+      const newItem = {
+        id: `FR-${Math.floor(100 + Math.random() * 900)}`,
+        name: name,
+        category: category,
+        price: price,
+        stock: stock,
+        icon: '💎'
+      };
+
+      inventory.push(newItem);
+      saveInventory(inventory);
+      closeNewInventoryItemModal();
+      playBeep('success');
+      notify(`Added ${name} to stock registry!`);
+    }
+
+    // ----------------------------------------------------
+    // 9. CRM & CUSTOMER DIRECTORY
+    // ----------------------------------------------------
+    function getStoredCustomers() {
+      try {
+        const raw = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function upsertCustomerProfile(customer, orderTotal) {
+      const customers = getStoredCustomers();
+      const existing = customers.find(c => c.phone === customer.phone);
+
+      if (existing) {
+        existing.totalOrders += 1;
+        existing.lifetimeSpent += orderTotal;
+        existing.lastVisit = new Date().toLocaleDateString('en-GB');
+        if (customer.name) existing.name = customer.name;
+        if (customer.address) existing.address = customer.address;
+      } else {
+        customers.push({
+          name: customer.name,
+          phone: customer.phone,
+          address: customer.address || 'Outlet Client',
+          totalOrders: 1,
+          lifetimeSpent: orderTotal,
+          lastVisit: new Date().toLocaleDateString('en-GB')
+        });
+      }
+
+      localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers));
+      renderCRMTable();
+    }
+
+    function renderCRMTable() {
+      const customers = getStoredCustomers();
+      const query = (document.getElementById('crmSearchQuery')?.value || '').toLowerCase().trim();
+      const tbody = document.getElementById('crmTableBody');
+
+      const filtered = customers.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 text-xs">No client accounts recorded yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(c => {
+        let tier = 'Standard';
+        let tierClass = 'bg-slate-800 text-slate-300';
+        if (c.lifetimeSpent > 2000) {
+          tier = 'Gold Member';
+          tierClass = 'bg-amber-950 text-amber-300 border border-amber-800';
+        }
+        if (c.lifetimeSpent > 5000) {
+          tier = 'Royal VIP';
+          tierClass = 'bg-purple-950 text-purple-300 border border-purple-800';
+        }
+
+        const rawPhone = c.phone.replace(/[^0-9]/g, '');
+        const waNumber = rawPhone.startsWith('88') ? rawPhone : (rawPhone.startsWith('01') ? `88${rawPhone}` : rawPhone);
+        const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hello ${c.name}, greetings from Elvaren Fragrances!`)}`;
+
+        return `
+          <tr class="hover:bg-brand-dark/40 transition">
+            <td class="p-3 font-bold text-white">${c.name}</td>
+            <td class="p-3 font-mono text-slate-300">${c.phone}</td>
+            <td class="p-3 text-slate-400">${c.address || 'Counter Sale'}</td>
+            <td class="p-3 text-center font-bold text-slate-200">${c.totalOrders}</td>
+            <td class="p-3 text-right font-mono font-bold text-brand-gold">৳${formatBDT(c.lifetimeSpent)}</td>
+            <td class="p-3 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${tierClass}">${tier}</span>
+            </td>
+            <td class="p-3 text-center">
+              <a href="${waLink}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-700/60 text-emerald-400 rounded-lg text-xs font-bold transition">
+                <i class="fa-brands fa-whatsapp"></i> Chat
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ----------------------------------------------------
+    // 10. DAY-END CASH AUDIT & PETTY CASH EXPENSE
+    // ----------------------------------------------------
+    function getStoredExpenses() {
+      try {
+        const raw = localStorage.getItem(EXPENSES_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function handleExpenseSubmit(e) {
+      e.preventDefault();
+      const reason = document.getElementById('expenseReason').value.trim();
+      const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+      const method = document.getElementById('expensePaymentMethod').value;
+
+      if (!reason || amount <= 0) return notify("Enter valid expense details.", "error");
+
+      const expenses = getStoredExpenses();
+      expenses.unshift({
+        id: `EXP-${Date.now().toString().slice(-4)}`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: new Date().toLocaleDateString('en-GB'),
+        reason: reason,
+        amount: amount,
+        method: method
+      });
+
+      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expenses));
+      document.getElementById('expenseReason').value = '';
+      document.getElementById('expenseAmount').value = '';
+
+      playBeep('add');
+      notify(`Logged expense: ৳${amount}`);
+      renderExpensesTable();
+      calculateRegisterAudit();
+    }
+
+    function renderExpensesTable() {
+      const expenses = getStoredExpenses();
+      const today = new Date().toLocaleDateString('en-GB');
+      const todayExpenses = expenses.filter(e => e.date === today);
+      const tbody = document.getElementById('expensesTableBody');
+
+      if (todayExpenses.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 text-xs">No petty expenses recorded today.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = todayExpenses.map((exp, idx) => `
+        <tr>
+          <td class="p-2.5 text-slate-400 font-mono text-[10px]">${exp.time}</td>
+          <td class="p-2.5 font-bold text-white">${exp.reason} <span class="text-[10px] text-slate-500 font-normal">(${exp.method})</span></td>
+          <td class="p-2.5 text-right font-mono font-bold text-rose-400">৳${formatBDT(exp.amount)}</td>
+          <td class="p-2.5 text-center">
+            <button onclick="deleteExpenseEntry(${idx})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-xmark text-xs"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function deleteExpenseEntry(idx) {
+      const expenses = getStoredExpenses();
+      expenses.splice(idx, 1);
+      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expenses));
+      renderExpensesTable();
+      calculateRegisterAudit();
+    }
+
+    function calculateRegisterAudit() {
+      renderExpensesTable();
+
+      const orders = getStoredOrders();
+      const today = new Date().toLocaleDateString('en-GB');
+      const todayOrders = orders.filter(o => o.date === today);
+
+      const cashSales = todayOrders
+        .filter(o => o.paymentMethod === 'Cash')
+        .reduce((sum, o) => sum + o.grandTotal, 0);
+
+      const expenses = getStoredExpenses();
+      const cashExpenses = expenses
+        .filter(e => e.date === today && e.method === 'Cash Drawer')
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      const openingFloat = parseFloat(document.getElementById('openingCashAmount').value) || 0;
+      const physicalCount = parseFloat(document.getElementById('physicalCashCount').value) || 0;
+
+      const expectedCash = openingFloat + cashSales - cashExpenses;
+      const variance = physicalCount - expectedCash;
+
+      document.getElementById('auditOpeningFloat').innerText = `৳${formatBDT(openingFloat)}`;
+      document.getElementById('auditCashSales').innerText = `৳${formatBDT(cashSales)}`;
+      document.getElementById('auditCashExpenses').innerText = `৳${formatBDT(cashExpenses)}`;
+      document.getElementById('auditExpectedCash').innerText = `৳${formatBDT(expectedCash)}`;
+
+      const varianceEl = document.getElementById('auditVariance');
+      if (physicalCount === 0) {
+        varianceEl.innerText = `Pending Night Count`;
+        varianceEl.className = "text-slate-400";
+      } else if (variance === 0) {
+        varianceEl.innerText = `৳0 (Perfect Match)`;
+        varianceEl.className = "text-emerald-400 font-bold";
+      } else if (variance > 0) {
+        varianceEl.innerText = `+ ৳${formatBDT(variance)} (Surplus/Excess)`;
+        varianceEl.className = "text-blue-400 font-bold";
+      } else {
+        varianceEl.innerText = `- ৳${formatBDT(Math.abs(variance))} (Shortage/Deficit)`;
+        varianceEl.className = "text-rose-400 font-bold";
+      }
+    }
+
+    // ----------------------------------------------------
+    // 11. TOP METRICS KPI SYNCHRONIZATION
+    // ----------------------------------------------------
+    function updateTopMetrics() {
+      const orders = getStoredOrders();
+      const today = new Date().toLocaleDateString('en-GB');
+      const todayOrders = orders.filter(o => o.date === today);
+
+      const grossRev = todayOrders.reduce((sum, o) => sum + o.grandTotal, 0);
+      const cashTotal = todayOrders.filter(o => o.paymentMethod === 'Cash').reduce((sum, o) => sum + o.grandTotal, 0);
+      const digitalTotal = todayOrders.filter(o => o.paymentMethod === 'bKash' || o.paymentMethod === 'Nagad').reduce((sum, o) => sum + o.grandTotal, 0);
+      const cardTotal = todayOrders.filter(o => o.paymentMethod === 'Card').reduce((sum, o) => sum + o.grandTotal, 0);
+
+      const inventory = getStoredInventory();
+      const lowStockCount = inventory.filter(i => i.stock <= 5).length;
+
+      document.getElementById('statTodayOrders').innerText = todayOrders.length;
+      document.getElementById('statTodayRevenue').innerText = `৳${formatBDT(grossRev)}`;
+      document.getElementById('statCashTotal').innerText = `৳${formatBDT(cashTotal)}`;
+      document.getElementById('statDigitalTotal').innerText = `৳${formatBDT(digitalTotal)}`;
+      document.getElementById('statCardTotal').innerText = `৳${formatBDT(cardTotal)}`;
+
+      const lowStockEl = document.getElementById('statLowStockCount');
+      const lowStockIcon = document.getElementById('lowStockBadgeIcon');
+      lowStockEl.innerText = lowStockCount;
+
+      if (lowStockCount > 0) {
+        lowStockIcon.className = "p-1.5 rounded-lg bg-rose-500/20 text-rose-400 text-xs animate-bounce";
+        lowStockEl.className = "text-2xl font-black text-rose-400";
+      } else {
+        lowStockIcon.className = "p-1.5 rounded-lg bg-slate-800 text-slate-400 text-xs";
+        lowStockEl.className = "text-2xl font-black text-slate-200";
+      }
+    }
+
+    // Initialize Mock Initial Data
+    function seedAppDefaults() {
+      if (!localStorage.getItem(ORDERS_STORAGE_KEY)) {
+        const seed = [
           {
-            id: 'ELV-1021',
+            id: 'ELV-1001',
             timestamp: new Date().toISOString(),
             date: new Date().toLocaleDateString('en-GB'),
-            time: '04:15 PM',
-            customer: { name: 'Saimon Chowdhury', phone: '01812345678', address: 'GEC Circle, Chattogram' },
+            time: '11:30 AM',
+            customer: { name: 'Saimon Chowdhury', phone: '01863680414', address: 'GEC Circle, Chattogram' },
             items: [
-              { name: 'Vampire Blood', size: '6ml Roll-on Attar', price: 190, qty: 1, total: 190 },
-              { name: 'Creed Aventus', size: '30ml Pocket EDP', price: 190, qty: 1, total: 190 }
+              { name: 'Vampire Blood', size: '6ml Roll-on', price: 190, qty: 1, total: 190 },
+              { name: 'নিশা (Nisha)', size: '6ml Roll-on', price: 190, qty: 1, total: 190 }
             ],
             subtotal: 380,
             discount: 0,
+            delivery: 0,
             grandTotal: 380,
             paymentMethod: 'Cash'
           }
         ];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleOrders));
+        localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(seed));
+      }
+
+      if (!localStorage.getItem(CUSTOMERS_STORAGE_KEY)) {
+        const seedCustomers = [
+          {
+            name: 'Saimon Chowdhury',
+            phone: '01863680414',
+            address: 'GEC Circle, Chattogram',
+            totalOrders: 1,
+            lifetimeSpent: 380,
+            lastVisit: new Date().toLocaleDateString('en-GB')
+          }
+        ];
+        localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(seedCustomers));
       }
     }
 
-    // App Startup
+    // App Mount
     window.onload = function() {
       checkAuthentication();
-      seedInitialData();
-      renderOrdersTable();
-      updateMetrics();
-
-      const dateEl = document.getElementById('currentDateIndicator');
-      dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      seedAppDefaults();
+      renderCatalogGrid();
+      renderOrdersLogTable();
+      renderInventoryTable();
+      renderCRMTable();
+      updateTopMetrics();
     };
   </script>
 </body>
