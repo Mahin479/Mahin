@@ -3,20 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Elvaren — Enterprise Fragrance POS & Customer Hub</title>
-  
-  <!-- Tailwind CSS CDN -->
+  <title>Elvaren — Fragrance POS & Order Hub</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- FontAwesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Google Fonts: Plus Jakarta Sans & Cinzel -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- SheetJS for pure .xlsx export fallback -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
@@ -25,47 +18,31 @@
         extend: {
           colors: {
             brand: {
-              gold: '#F59E0B',
-              goldHover: '#D97706',
-              goldLight: '#FEF3C7',
-              dark: '#080C14',
-              surface: '#0E1422',
-              card: '#141C2E',
-              border: '#232E48',
-              accent: '#38BDF8'
+              gold: '#F59E0B', goldHover: '#D97706', goldLight: '#FEF3C7',
+              dark: '#080C14', surface: '#0E1422', card: '#141C2E',
+              border: '#232E48', accent: '#38BDF8'
             }
           },
-          fontFamily: {
-            serif: ['Cinzel', 'serif'],
-            sans: ['Plus Jakarta Sans', 'sans-serif']
-          }
+          fontFamily: { serif: ['Cinzel', 'serif'], sans: ['Plus Jakarta Sans', 'sans-serif'] }
         }
       }
     }
   </script>
 
   <style>
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: #080C14; }
     ::-webkit-scrollbar-thumb { background: #232E48; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
 
-    /* POS 80mm Print Styling */
     @media print {
       body * { visibility: hidden !important; }
       #printableReceipt, #printableReceipt * { visibility: visible !important; }
       #printableReceipt {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 80mm !important;
-        margin: 0 !important;
-        padding: 5mm !important;
-        background: #ffffff !important;
-        color: #000000 !important;
-        font-family: 'Courier New', Courier, monospace !important;
-        font-size: 11px !important;
+        position: absolute !important; left: 0 !important; top: 0 !important;
+        width: 80mm !important; margin: 0 !important; padding: 5mm !important;
+        background: #ffffff !important; color: #000000 !important;
+        font-family: 'Courier New', Courier, monospace !important; font-size: 11px !important;
       }
       .no-print { display: none !important; }
     }
@@ -74,34 +51,31 @@
 
 <body class="bg-brand-dark text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-gold selection:text-brand-dark">
 
-  <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
   <div id="toastStack" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- ================= AUTHENTICATION GATEWAY ================= -->
+  <!-- ================= LOGIN ================= -->
   <div id="authScreen" class="fixed inset-0 z-50 bg-[#080C14]/95 backdrop-blur-xl flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-brand-surface border border-brand-border rounded-3xl shadow-2xl p-8 relative overflow-hidden">
       <div class="absolute -top-20 -right-20 w-48 h-48 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="text-center mb-8 relative">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark font-serif font-black text-2xl shadow-xl shadow-amber-500/20 mb-3">
-          E
-        </div>
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark font-serif font-black text-2xl shadow-xl shadow-amber-500/20 mb-3">E</div>
         <h2 class="text-2xl font-serif font-bold text-white tracking-widest uppercase">Elvaren</h2>
-        <p class="text-[11px] text-brand-gold tracking-widest uppercase font-semibold mt-0.5">Enterprise Fragrance POS & Order Hub</p>
+        <p class="text-[11px] text-brand-gold tracking-widest uppercase font-semibold mt-0.5">Fragrance POS & Order Hub</p>
       </div>
 
       <div id="authErrorAlert" class="hidden mb-4 p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-300 text-xs flex items-center gap-2.5">
         <i class="fa-solid fa-circle-exclamation text-red-400"></i>
-        <span id="authErrorMsg">Invalid Login ID or Password.</span>
+        <span>Invalid Login ID or Password.</span>
       </div>
 
-      <form onsubmit="handleUserLogin(event)" class="space-y-4 relative">
+      <form onsubmit="handleUserLogin(event)" class="space-y-4 relative" autocomplete="off">
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Operator ID</label>
           <div class="relative">
             <i class="fa-solid fa-user-shield absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
-            <input type="text" id="loginUsername" required placeholder="mahinihfajsaimon" class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl pl-10 pr-3 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition shadow-inner">
+            <input type="text" id="loginUsername" required autocomplete="off" placeholder="Enter your ID" class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl pl-10 pr-3 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition shadow-inner">
           </div>
         </div>
 
@@ -109,7 +83,7 @@
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Security Password</label>
           <div class="relative">
             <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
-            <input type="password" id="loginPassword" required placeholder="••••••••••••••••" class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition shadow-inner">
+            <input type="password" id="loginPassword" required autocomplete="new-password" placeholder="Enter password" class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition shadow-inner">
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-200">
               <i id="togglePassIcon" class="fa-solid fa-eye-slash text-xs"></i>
             </button>
@@ -123,293 +97,213 @@
       </form>
 
       <div class="mt-6 text-center text-[10px] text-slate-500 flex items-center justify-center gap-2">
-        <span>● 100% Offline Capability</span>
-        <span>•</span>
-        <span>● Direct Excel Streaming</span>
+        <span>● 100% Offline</span><span>•</span><span>● Direct Excel Streaming</span>
       </div>
     </div>
   </div>
 
-  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <!-- ================= HEADER ================= -->
   <header class="bg-brand-surface/90 backdrop-blur-md border-b border-brand-border sticky top-0 z-40">
     <div class="max-w-[1720px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
-      
-      <!-- Brand & Status -->
+
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark shadow-lg shadow-amber-500/20 font-serif font-black text-xl">
-          E
-        </div>
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark shadow-lg shadow-amber-500/20 font-serif font-black text-xl">E</div>
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-lg font-bold tracking-wider font-serif text-white uppercase">Elvaren</h1>
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-              Live POS
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>Live POS
             </span>
           </div>
-          <p class="text-[11px] text-slate-400">Luxury Fragrance House & Offline Retail Hub</p>
+          <p class="text-[11px] text-slate-400">Perfume Oil House & Order Hub</p>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
       <nav class="flex items-center gap-1 bg-brand-dark/80 p-1 rounded-xl border border-brand-border overflow-x-auto max-w-full">
-        <button onclick="switchTab('pos')" id="tabBtn_pos" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand-gold text-brand-dark shadow-sm">
-          <i class="fa-solid fa-cash-register"></i> <span>POS Counter</span>
-        </button>
-        <button onclick="switchTab('orders')" id="tabBtn_orders" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
-          <i class="fa-solid fa-receipt"></i> <span>Orders & Sales</span>
-        </button>
-        <button onclick="switchTab('inventory')" id="tabBtn_inventory" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
-          <i class="fa-solid fa-boxes-stacked"></i> <span>Inventory</span>
-        </button>
-        <button onclick="switchTab('crm')" id="tabBtn_crm" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
-          <i class="fa-solid fa-users"></i> <span>Customers</span>
-        </button>
-        <button onclick="switchTab('cash')" id="tabBtn_cash" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5">
-          <i class="fa-solid fa-vault"></i> <span>Day-End Register</span>
-        </button>
+        <button onclick="switchTab('pos')" id="tabBtn_pos" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand-gold text-brand-dark shadow-sm"><i class="fa-solid fa-cash-register"></i> <span>POS Counter</span></button>
+        <button onclick="switchTab('orders')" id="tabBtn_orders" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-receipt"></i> <span>Orders</span></button>
+        <button onclick="switchTab('inventory')" id="tabBtn_inventory" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-boxes-stacked"></i> <span>Inventory</span></button>
+        <button onclick="switchTab('crm')" id="tabBtn_crm" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-users"></i> <span>Customers</span></button>
+        <button onclick="switchTab('cash')" id="tabBtn_cash" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-vault"></i> <span>Day-End</span></button>
       </nav>
 
-      <!-- System Actions (Direct Local Excel Connect & Backup) -->
       <div class="flex items-center gap-2">
-        <button id="excelSyncBtn" onclick="connectDesktopExcelFile()" title="Stream every sale directly to a local .csv on your computer without uploads" class="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
-          <span id="excelSyncIcon">🔗</span>
-          <span id="excelSyncLabel">Connect Local Excel</span>
+        <button id="excelSyncBtn" onclick="connectDesktopExcelFile()" title="Stream every sale to a local .csv on your computer" class="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
+          <span id="excelSyncIcon">🔗</span><span id="excelSyncLabel">Connect Local Excel</span>
         </button>
-
-        <button onclick="exportSheetJSXlsx()" title="Download genuine Microsoft Excel (.xlsx) file" class="flex items-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
-          <i class="fa-solid fa-file-excel"></i>
-          <span class="hidden sm:inline">Export .XLSX</span>
+        <button onclick="exportSheetJSXlsx()" title="Download .xlsx" class="flex items-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
+          <i class="fa-solid fa-file-excel"></i><span class="hidden sm:inline">Export .XLSX</span>
         </button>
-
         <button onclick="handleUserLogout()" title="Lock terminal" class="flex items-center gap-1.5 bg-slate-900 hover:bg-red-950/60 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-800 text-xs font-semibold px-2.5 py-1.5 rounded-xl transition">
           <i class="fa-solid fa-power-off"></i>
         </button>
       </div>
-
     </div>
   </header>
 
-  <!-- ================= TOP METRICS KPI BAR ================= -->
+  <!-- ================= KPI BAR ================= -->
   <section class="max-w-[1720px] w-full mx-auto px-4 sm:px-6 pt-4">
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-      
-      <!-- Total Orders Today -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
       <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Orders Today</span>
-          <span class="p-1.5 rounded-lg bg-amber-500/10 text-brand-gold text-xs"><i class="fa-solid fa-bag-shopping"></i></span>
-        </div>
-        <div class="flex items-baseline gap-2 mt-1">
-          <h4 id="statTodayOrders" class="text-2xl font-black text-white">0</h4>
-          <span class="text-[10px] text-slate-500">tickets</span>
-        </div>
+        <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Orders Today</span><span class="p-1.5 rounded-lg bg-amber-500/10 text-brand-gold text-xs"><i class="fa-solid fa-bag-shopping"></i></span></div>
+        <div class="flex items-baseline gap-2 mt-1"><h4 id="statTodayOrders" class="text-2xl font-black text-white">0</h4><span class="text-[10px] text-slate-500">tickets</span></div>
       </div>
-
-      <!-- Gross Revenue Today -->
       <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gross Sales</span>
-          <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs"><i class="fa-solid fa-bangladeshi-taka-sign"></i></span>
-        </div>
-        <div class="flex items-baseline gap-1 mt-1">
-          <h4 id="statTodayRevenue" class="text-2xl font-black text-brand-gold">৳0</h4>
-        </div>
+        <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gross Sales</span><span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs"><i class="fa-solid fa-bangladeshi-taka-sign"></i></span></div>
+        <div class="mt-1"><h4 id="statTodayRevenue" class="text-2xl font-black text-brand-gold">৳0</h4></div>
       </div>
-
-      <!-- Cash in Drawer -->
       <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cash in Hand</span>
-          <span class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-xs"><i class="fa-solid fa-money-bill-wave"></i></span>
-        </div>
-        <div class="flex items-baseline gap-1 mt-1">
-          <h4 id="statCashTotal" class="text-2xl font-black text-slate-100">৳0</h4>
-        </div>
+        <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cash Sales</span><span class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-xs"><i class="fa-solid fa-money-bill-wave"></i></span></div>
+        <div class="mt-1"><h4 id="statCashTotal" class="text-2xl font-black text-slate-100">৳0</h4></div>
       </div>
-
-      <!-- Mobile Banking -->
       <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">bKash / Nagad</span>
-          <span class="p-1.5 rounded-lg bg-pink-500/10 text-pink-400 text-xs"><i class="fa-solid fa-mobile-screen"></i></span>
-        </div>
-        <div class="flex items-baseline gap-1 mt-1">
-          <h4 id="statDigitalTotal" class="text-2xl font-black text-pink-400">৳0</h4>
-        </div>
+        <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">bKash / Nagad</span><span class="p-1.5 rounded-lg bg-pink-500/10 text-pink-400 text-xs"><i class="fa-solid fa-mobile-screen"></i></span></div>
+        <div class="mt-1"><h4 id="statDigitalTotal" class="text-2xl font-black text-pink-400">৳0</h4></div>
       </div>
-
-      <!-- Card / POS Machine -->
       <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Card Settlement</span>
-          <span class="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 text-xs"><i class="fa-regular fa-credit-card"></i></span>
-        </div>
-        <div class="flex items-baseline gap-1 mt-1">
-          <h4 id="statCardTotal" class="text-2xl font-black text-purple-400">৳0</h4>
-        </div>
+        <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Card</span><span class="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 text-xs"><i class="fa-regular fa-credit-card"></i></span></div>
+        <div class="mt-1"><h4 id="statCardTotal" class="text-2xl font-black text-purple-400">৳0</h4></div>
       </div>
-
-      <!-- Inventory Low Stock Warning -->
       <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Low Stock SKUs</span>
-          <span id="lowStockBadgeIcon" class="p-1.5 rounded-lg bg-slate-800 text-slate-400 text-xs"><i class="fa-solid fa-triangle-exclamation"></i></span>
-        </div>
-        <div class="flex items-baseline gap-2 mt-1">
-          <h4 id="statLowStockCount" class="text-2xl font-black text-slate-200">0</h4>
-          <span class="text-[10px] text-slate-500">bottles</span>
-        </div>
+        <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pending Delivery</span><span class="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 text-xs"><i class="fa-solid fa-truck-fast"></i></span></div>
+        <div class="flex items-baseline gap-2 mt-1"><h4 id="statPendingCount" class="text-2xl font-black text-sky-400">0</h4><span id="statPendingDue" class="text-[10px] text-slate-500">COD due ৳0</span></div>
       </div>
-
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-3.5 shadow-sm">
+        <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Low Stock</span><span id="lowStockBadgeIcon" class="p-1.5 rounded-lg bg-slate-800 text-slate-400 text-xs"><i class="fa-solid fa-triangle-exclamation"></i></span></div>
+        <div class="flex items-baseline gap-2 mt-1"><h4 id="statLowStockCount" class="text-2xl font-black text-slate-200">0</h4><span class="text-[10px] text-slate-500">perfumes</span></div>
+      </div>
     </div>
   </section>
 
-  <!-- ================= TAB CONTENT PANELS ================= -->
   <main class="max-w-[1720px] w-full mx-auto px-4 sm:px-6 py-5 flex-1 flex flex-col">
 
-    <!-- ==================== TAB 1: POS COUNTER TERMINAL ==================== -->
+    <!-- ==================== TAB 1: POS ==================== -->
     <div id="panel_pos" class="tab-panel grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-      
-      <!-- Catalog Grid & Quick Select (7 Cols) -->
+
       <div class="lg:col-span-7 bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col gap-4">
-        
-        <!-- Search & Filter bar -->
         <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-brand-border">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-brand-gold animate-pulse"></span>
             <h2 class="text-sm font-bold uppercase tracking-wider text-white">Fragrance Showcase</h2>
           </div>
-          
           <div class="flex items-center gap-2 flex-1 max-w-sm ml-auto">
             <div class="relative w-full">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-              <input type="text" id="catalogSearchQuery" oninput="filterCatalogGrid()" placeholder="Search perfume name..." class="w-full bg-brand-dark border border-brand-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+              <input type="text" id="catalogSearchQuery" oninput="renderCatalogGrid()" placeholder="Search perfume name..." class="w-full bg-brand-dark border border-brand-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
             </div>
-            <select id="catalogCategoryFilter" onchange="filterCatalogGrid()" class="bg-brand-dark border border-brand-border rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-gold">
-              <option value="ALL">All Lines</option>
+            <select id="catalogCategoryFilter" onchange="renderCatalogGrid()" class="bg-brand-dark border border-brand-border rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-gold">
+              <option value="ALL">All</option>
               <option value="ATTAR">Perfume Oil / Attar</option>
-              <option value="EDP">Spray EDP Bottles</option>
-              <option value="CUSTOM">Custom Variants</option>
+              <option value="CUSTOM">Custom</option>
             </select>
           </div>
         </div>
 
-        <!-- Quick Size Selector Bar -->
+        <!-- Size selector (only 3ml & 6ml) -->
         <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-          <span class="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">Default Size:</span>
-          <button type="button" onclick="setDefaultActiveSize('6ml Roll-on', 190)" class="size-pill active px-3 py-1 rounded-lg border border-brand-gold bg-brand-gold/20 text-brand-gold font-bold">6ml (৳190)</button>
-          <button type="button" onclick="setDefaultActiveSize('3ml Vial', 110)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">3ml (৳110)</button>
-          <button type="button" onclick="setDefaultActiveSize('12ml Crystal', 350)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">12ml (৳350)</button>
-          <button type="button" onclick="setDefaultActiveSize('30ml EDP', 550)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">30ml (৳550)</button>
-          <button type="button" onclick="setDefaultActiveSize('50ml EDP', 850)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">50ml (৳850)</button>
+          <span class="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">Size:</span>
+          <button type="button" data-size="6ml Roll-on" onclick="setDefaultActiveSize('6ml Roll-on', 190)" class="size-pill px-3 py-1 rounded-lg border border-brand-gold bg-brand-gold/20 text-brand-gold font-bold">6ml (৳190)</button>
+          <button type="button" data-size="3ml Vial" onclick="setDefaultActiveSize('3ml Vial', 110)" class="size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600">3ml (৳110)</button>
+          <span class="ml-auto text-[10px] text-emerald-400 font-semibold whitespace-nowrap"><i class="fa-solid fa-gift"></i> ৫টি নিলে ৳50 ছাড় (অটো)</span>
         </div>
 
-        <!-- Catalog Fragrance Cards Grid -->
-        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[580px] overflow-y-auto pr-1">
-          <!-- Dynamically populated via JS -->
-        </div>
+        <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[580px] overflow-y-auto pr-1"></div>
 
-        <!-- Custom Item Adder Accordion -->
+        <!-- Custom item -->
         <div class="border-t border-brand-border pt-3 mt-1">
           <div class="flex items-center justify-between text-xs cursor-pointer text-slate-400 hover:text-brand-gold" onclick="toggleCustomItemBox()">
-            <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-plus-circle"></i> Add Bespoke / Custom Fragrance to Cart</span>
+            <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-plus-circle"></i> Add Custom Item to Cart</span>
             <i id="customItemCaret" class="fa-solid fa-chevron-down"></i>
           </div>
-
           <div id="customItemCollapse" class="hidden grid grid-cols-1 sm:grid-cols-12 gap-2 mt-3 p-3 bg-brand-dark/90 rounded-2xl border border-brand-border">
-            <div class="sm:col-span-5">
-              <input type="text" id="bespokeName" placeholder="Custom Fragrance Name" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
-            </div>
+            <div class="sm:col-span-5"><input type="text" id="bespokeName" placeholder="Custom Fragrance Name" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold"></div>
             <div class="sm:col-span-3">
               <select id="bespokeSize" class="w-full bg-brand-surface border border-brand-border rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
                 <option value="6ml Roll-on">6ml Roll-on</option>
                 <option value="3ml Vial">3ml Vial</option>
-                <option value="12ml Crystal">12ml Crystal</option>
-                <option value="30ml EDP">30ml EDP</option>
-                <option value="50ml EDP">50ml EDP</option>
                 <option value="Decant Sample">Decant Sample</option>
                 <option value="Gift Packaging Box">Gift Packaging Box</option>
               </select>
             </div>
-            <div class="sm:col-span-2">
-              <input type="number" id="bespokePrice" value="190" min="0" placeholder="Price" class="w-full bg-brand-surface border border-brand-border rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
-            </div>
-            <div class="sm:col-span-2">
-              <button type="button" onclick="addBespokeItemToCart()" class="w-full bg-brand-gold hover:bg-brand-goldHover text-brand-dark font-bold py-2 rounded-xl text-xs transition">
-                + Add
-              </button>
-            </div>
+            <div class="sm:col-span-2"><input type="number" id="bespokePrice" value="190" min="0" class="w-full bg-brand-surface border border-brand-border rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-brand-gold"></div>
+            <div class="sm:col-span-2"><button type="button" onclick="addBespokeItemToCart()" class="w-full bg-brand-gold hover:bg-brand-goldHover text-brand-dark font-bold py-2 rounded-xl text-xs transition">+ Add</button></div>
           </div>
         </div>
-
       </div>
 
-      <!-- POS Checkout & Cart Drawer (5 Cols) -->
+      <!-- Checkout -->
       <div class="lg:col-span-5 bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col justify-between">
-        
         <div class="space-y-4">
-          <!-- Customer Profile Entry -->
+
+          <!-- Customer -->
           <div class="p-3.5 bg-brand-dark/90 border border-brand-border rounded-2xl space-y-2.5">
             <div class="flex items-center justify-between">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-brand-gold flex items-center gap-1.5">
-                <i class="fa-solid fa-id-card"></i> Customer Account
-              </h3>
-              <span id="quickCustomerBadge" class="text-[10px] text-slate-500">Retail Walk-in</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-brand-gold flex items-center gap-1.5"><i class="fa-solid fa-id-card"></i> Customer</h3>
+              <span id="quickCustomerBadge" class="text-[10px] text-slate-500">New Customer</span>
             </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Phone Number *</label>
-                <input type="tel" id="checkoutPhone" oninput="handlePhoneLookup(this.value)" placeholder="017XXXXXXXX" pattern="^(?:\+88|88)?(01[3-9]\d{8})$" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
+                <input type="tel" id="checkoutPhone" oninput="handlePhoneLookup(this.value)" placeholder="017XXXXXXXX" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
               </div>
               <div>
                 <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Customer Name *</label>
                 <input type="text" id="checkoutName" placeholder="Customer Name" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
               </div>
             </div>
-
             <div>
-              <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Delivery Address / Outlet Note</label>
-              <input type="text" id="checkoutAddress" placeholder="e.g. Counter Sale / Dhanmondi, Dhaka" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
+              <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Delivery Address</label>
+              <input type="text" id="checkoutAddress" placeholder="e.g. GEC Circle, Chattogram" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Order Source</label>
+                <select id="checkoutSource" class="w-full bg-brand-surface border border-brand-border rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+                  <option>Facebook / Messenger</option>
+                  <option>WhatsApp</option>
+                  <option>Instagram</option>
+                  <option>Phone Call</option>
+                  <option>Counter / Walk-in</option>
+                  <option>Website</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 font-semibold mb-0.5">Note (optional)</label>
+                <input type="text" id="checkoutNote" placeholder="e.g. gift wrap, call before" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold">
+              </div>
             </div>
           </div>
 
-          <!-- Cart Line Items -->
+          <!-- Cart -->
           <div class="border border-brand-border rounded-2xl p-3 bg-brand-dark/50">
             <div class="flex items-center justify-between text-xs pb-2 border-b border-brand-border">
-              <span class="font-bold text-white flex items-center gap-1.5">
-                <i class="fa-solid fa-basket-shopping text-brand-gold"></i> Order Line Items
-              </span>
+              <span class="font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-basket-shopping text-brand-gold"></i> Order Items</span>
               <div class="flex items-center gap-2">
-                <span id="cartTotalItemsCount" class="text-[11px] font-bold text-brand-gold">0 items</span>
+                <span id="cartTotalItemsCount" class="text-[11px] font-bold text-brand-gold">0 bottles</span>
                 <button type="button" onclick="clearCart()" class="text-[10px] text-slate-500 hover:text-red-400 transition">Clear</button>
               </div>
             </div>
-
-            <div id="cartItemsList" class="space-y-1.5 max-h-48 overflow-y-auto mt-2 pr-1">
-              <div class="text-center py-6 text-xs text-slate-600 border border-dashed border-brand-border/60 rounded-xl">
-                Cart is empty. Tap any perfume card on the left.
-              </div>
-            </div>
+            <div id="cartItemsList" class="space-y-1.5 max-h-48 overflow-y-auto mt-2 pr-1"></div>
           </div>
 
-          <!-- Pricing & Calculations Box -->
+          <!-- Totals -->
           <div class="p-3.5 bg-brand-dark/90 border border-brand-border rounded-2xl space-y-2">
-            
-            <div class="flex justify-between text-xs text-slate-400">
-              <span>Subtotal:</span>
-              <span id="calcSubtotal" class="font-bold text-slate-200">৳0</span>
+            <div class="flex justify-between text-xs text-slate-400"><span>Subtotal:</span><span id="calcSubtotal" class="font-bold text-slate-200">৳0</span></div>
+            <div id="autoDiscountRow" class="flex justify-between text-xs text-emerald-400"><span id="autoDiscountLabel">৫টি নিলে ৳50 ছাড়: আর ০টি বাকি</span><span id="calcAutoDiscount" class="font-bold">- ৳0</span></div>
+
+            <div class="pt-1 border-t border-brand-border/60">
+              <label class="block text-[10px] text-slate-400 mb-1">Delivery Charge</label>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" data-fee="0" onclick="setDeliveryFee(0)" class="fee-chip p-1.5 rounded-xl border text-xs font-bold">Pickup ৳0</button>
+                <button type="button" data-fee="60" onclick="setDeliveryFee(60)" class="fee-chip p-1.5 rounded-xl border text-xs font-bold">Inside ৳60</button>
+                <button type="button" data-fee="120" onclick="setDeliveryFee(120)" class="fee-chip p-1.5 rounded-xl border text-xs font-bold">Outside ৳120</button>
+              </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-brand-border/60">
+            <div class="grid grid-cols-1 gap-2 pt-1">
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">Discount (Flat ৳)</label>
+                <label class="block text-[10px] text-slate-400 mb-0.5">Extra Discount (Flat ৳, optional)</label>
                 <input type="number" id="calcDiscount" value="0" min="0" oninput="recalculateTotals()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-brand-gold">
-              </div>
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">Delivery Fee (৳)</label>
-                <input type="number" id="calcDelivery" value="0" min="0" oninput="recalculateTotals()" class="w-full bg-brand-surface border border-brand-border rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-brand-gold">
               </div>
             </div>
 
@@ -418,196 +312,142 @@
               <span id="calcGrandTotal" class="text-xl font-black text-brand-gold font-mono">৳0</span>
             </div>
 
-            <!-- Payment Methods -->
+            <!-- Payment -->
             <div class="pt-2">
-              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Payment Channel</label>
-              <div class="grid grid-cols-4 gap-1.5">
-                <button type="button" onclick="setCheckoutPayment('Cash')" class="pay-chip active p-2 rounded-xl border border-brand-gold bg-brand-gold/15 text-brand-gold text-xs font-bold flex flex-col items-center gap-1">
-                  <i class="fa-solid fa-money-bill-wave text-emerald-400 text-sm"></i>
-                  <span>Cash</span>
-                </button>
-                <button type="button" onclick="setCheckoutPayment('bKash')" class="pay-chip p-2 rounded-xl border border-brand-border bg-brand-surface text-slate-400 text-xs font-semibold flex flex-col items-center gap-1 hover:border-slate-600">
-                  <i class="fa-solid fa-paper-plane text-pink-400 text-sm"></i>
-                  <span>bKash</span>
-                </button>
-                <button type="button" onclick="setCheckoutPayment('Nagad')" class="pay-chip p-2 rounded-xl border border-brand-border bg-brand-surface text-slate-400 text-xs font-semibold flex flex-col items-center gap-1 hover:border-slate-600">
-                  <i class="fa-solid fa-bolt text-orange-400 text-sm"></i>
-                  <span>Nagad</span>
-                </button>
-                <button type="button" onclick="setCheckoutPayment('Card')" class="pay-chip p-2 rounded-xl border border-brand-border bg-brand-surface text-slate-400 text-xs font-semibold flex flex-col items-center gap-1 hover:border-slate-600">
-                  <i class="fa-regular fa-credit-card text-blue-400 text-sm"></i>
-                  <span>Card</span>
-                </button>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Payment</label>
+              <div class="grid grid-cols-5 gap-1.5">
+                <button type="button" data-pay="Cash" onclick="setCheckoutPayment('Cash')" class="pay-chip p-2 rounded-xl border text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-money-bill-wave text-emerald-400 text-sm"></i><span>Cash</span></button>
+                <button type="button" data-pay="COD" onclick="setCheckoutPayment('COD')" class="pay-chip p-2 rounded-xl border text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-truck text-sky-400 text-sm"></i><span>COD</span></button>
+                <button type="button" data-pay="bKash" onclick="setCheckoutPayment('bKash')" class="pay-chip p-2 rounded-xl border text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-paper-plane text-pink-400 text-sm"></i><span>bKash</span></button>
+                <button type="button" data-pay="Nagad" onclick="setCheckoutPayment('Nagad')" class="pay-chip p-2 rounded-xl border text-xs flex flex-col items-center gap-1"><i class="fa-solid fa-bolt text-orange-400 text-sm"></i><span>Nagad</span></button>
+                <button type="button" data-pay="Card" onclick="setCheckoutPayment('Card')" class="pay-chip p-2 rounded-xl border text-xs flex flex-col items-center gap-1"><i class="fa-regular fa-credit-card text-blue-400 text-sm"></i><span>Card</span></button>
               </div>
             </div>
-
           </div>
         </div>
 
-        <!-- Big Process Order Button -->
-        <button type="button" onclick="processCheckoutOrder()" class="w-full mt-4 py-3.5 px-4 bg-gradient-to-r from-amber-600 via-brand-gold to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-brand-dark font-extrabold text-xs tracking-wider uppercase rounded-2xl shadow-xl shadow-amber-600/25 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-          <i class="fa-solid fa-print text-sm"></i>
-          <span>Save & Print 80mm Slip</span>
-        </button>
-
+        <div class="grid grid-cols-3 gap-2 mt-4">
+          <button type="button" onclick="processCheckoutOrder(false)" class="col-span-1 py-3.5 px-2 bg-brand-dark hover:bg-brand-card border border-brand-gold/60 text-brand-gold font-extrabold text-[11px] tracking-wider uppercase rounded-2xl transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i><span>Save Only</span>
+          </button>
+          <button type="button" onclick="processCheckoutOrder(true)" class="col-span-2 py-3.5 px-4 bg-gradient-to-r from-amber-600 via-brand-gold to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-brand-dark font-extrabold text-xs tracking-wider uppercase rounded-2xl shadow-xl shadow-amber-600/25 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-print text-sm"></i><span>Save & Print Slip</span>
+          </button>
+        </div>
       </div>
-
     </div>
 
-    <!-- ==================== TAB 2: ORDER HISTORY & AUDIT LOG ==================== -->
+    <!-- ==================== TAB 2: ORDERS ==================== -->
     <div id="panel_orders" class="tab-panel hidden flex-1 flex flex-col gap-4">
       <div class="bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col flex-1">
-        
-        <!-- Search and Date Filter -->
         <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border">
           <div>
-            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-receipt text-brand-gold"></i> Completed Sales & Invoices
-            </h2>
-            <p class="text-[11px] text-slate-400">All transactions stored locally and auto-streamed to Excel</p>
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-receipt text-brand-gold"></i> Orders & Invoices</h2>
+            <p class="text-[11px] text-slate-400">Track delivery status, copy order summary, reprint slips</p>
           </div>
-
           <div class="flex items-center gap-2 flex-wrap">
+            <select id="orderStatusFilter" onchange="renderOrdersLogTable()" class="bg-brand-dark border border-brand-border rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-gold">
+              <option value="ALL">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
             <div class="relative w-64">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-              <input type="text" id="orderLogSearch" oninput="renderOrdersLogTable()" placeholder="Search ID, customer, phone..." class="w-full bg-brand-dark border border-brand-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+              <input type="text" id="orderLogSearch" oninput="renderOrdersLogTable()" placeholder="Search ID, name, phone..." class="w-full bg-brand-dark border border-brand-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
             </div>
-
-            <button onclick="exportCSVOrders()" class="px-3 py-1.5 rounded-xl border border-brand-border bg-brand-dark text-slate-300 text-xs font-semibold hover:border-brand-gold transition flex items-center gap-1.5">
-              <i class="fa-solid fa-download text-brand-gold"></i> Export CSV
-            </button>
+            <button onclick="exportCSVOrders()" class="px-3 py-1.5 rounded-xl border border-brand-border bg-brand-dark text-slate-300 text-xs font-semibold hover:border-brand-gold transition flex items-center gap-1.5"><i class="fa-solid fa-download text-brand-gold"></i> CSV</button>
           </div>
         </div>
 
-        <!-- Table View -->
         <div class="flex-1 overflow-x-auto mt-4">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="border-b border-brand-border text-slate-400 font-bold uppercase text-[10px] tracking-wider bg-brand-dark/40">
-                <th class="p-3">Order ID / Time</th>
-                <th class="p-3">Customer Information</th>
-                <th class="p-3">Fragrance Breakdown</th>
+                <th class="p-3">Order / Time</th>
+                <th class="p-3">Customer</th>
+                <th class="p-3">Items</th>
                 <th class="p-3">Payment</th>
-                <th class="p-3 text-right">Net Total (৳)</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-right">Total (৳)</th>
                 <th class="p-3 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody id="ordersLogTableBody" class="divide-y divide-brand-border/60 text-slate-200">
-              <!-- Dynamically populated -->
-            </tbody>
+            <tbody id="ordersLogTableBody" class="divide-y divide-brand-border/60 text-slate-200"></tbody>
           </table>
         </div>
-
         <div class="pt-3 border-t border-brand-border flex items-center justify-between text-[11px] text-slate-500">
-          <span id="ordersLogCount">0 orders recorded</span>
-          <span>100% Offline Persistence</span>
+          <span id="ordersLogCount">0 orders</span><span>Saved offline in this browser</span>
         </div>
-
       </div>
     </div>
 
-    <!-- ==================== TAB 3: INVENTORY MASTER ==================== -->
+    <!-- ==================== TAB 3: INVENTORY ==================== -->
     <div id="panel_inventory" class="tab-panel hidden flex-1 flex flex-col gap-4">
       <div class="bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col flex-1">
-        
         <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border">
           <div>
-            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-boxes-stacked text-brand-gold"></i> Inventory & Stock Controller
-            </h2>
-            <p class="text-[11px] text-slate-400">Track units, update retail prices, and manage low stock alerts</p>
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-boxes-stacked text-brand-gold"></i> Inventory</h2>
+            <p class="text-[11px] text-slate-400">Stock count, prices and low-stock alerts (≤ 5 = low)</p>
           </div>
-
-          <div class="flex items-center gap-2">
-            <button onclick="openNewInventoryItemModal()" class="px-3.5 py-1.5 rounded-xl bg-brand-gold hover:bg-brand-goldHover text-brand-dark text-xs font-bold transition flex items-center gap-1.5 shadow-md">
-              <i class="fa-solid fa-plus"></i> Add New Fragrance SKU
-            </button>
-          </div>
+          <button onclick="openNewInventoryItemModal()" class="px-3.5 py-1.5 rounded-xl bg-brand-gold hover:bg-brand-goldHover text-brand-dark text-xs font-bold transition flex items-center gap-1.5 shadow-md"><i class="fa-solid fa-plus"></i> Add New Fragrance</button>
         </div>
-
         <div class="flex-1 overflow-x-auto mt-4">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="border-b border-brand-border text-slate-400 font-bold uppercase text-[10px] tracking-wider bg-brand-dark/40">
-                <th class="p-3">Fragrance Name</th>
-                <th class="p-3">Category</th>
-                <th class="p-3">Sizes Available</th>
-                <th class="p-3 text-right">Unit Price (৳)</th>
-                <th class="p-3 text-center">Current Stock</th>
-                <th class="p-3 text-center">Status</th>
-                <th class="p-3 text-center">Stock Adjustment</th>
+                <th class="p-3">Fragrance</th><th class="p-3">Category</th><th class="p-3">Sizes</th>
+                <th class="p-3 text-right">6ml Price (৳)</th><th class="p-3 text-center">Stock</th>
+                <th class="p-3 text-center">Status</th><th class="p-3 text-center">Adjust</th>
               </tr>
             </thead>
-            <tbody id="inventoryTableBody" class="divide-y divide-brand-border/60 text-slate-200">
-              <!-- Dynamically Populated -->
-            </tbody>
+            <tbody id="inventoryTableBody" class="divide-y divide-brand-border/60 text-slate-200"></tbody>
           </table>
         </div>
-
       </div>
     </div>
 
-    <!-- ==================== TAB 4: CRM / CUSTOMER DIRECTORY ==================== -->
+    <!-- ==================== TAB 4: CUSTOMERS ==================== -->
     <div id="panel_crm" class="tab-panel hidden flex-1 flex flex-col gap-4">
       <div class="bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl flex flex-col flex-1">
-        
         <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-brand-border">
           <div>
-            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-users text-brand-gold"></i> Client Directory & LTV Hub
-            </h2>
-            <p class="text-[11px] text-slate-400">Customer profiles, total spent, and one-click WhatsApp contact</p>
+            <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-users text-brand-gold"></i> Customers</h2>
+            <p class="text-[11px] text-slate-400">Profiles, total spent and one-click WhatsApp</p>
           </div>
-
-          <div class="w-64">
-            <input type="text" id="crmSearchQuery" oninput="renderCRMTable()" placeholder="Search client name or phone..." class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
-          </div>
+          <div class="w-64"><input type="text" id="crmSearchQuery" oninput="renderCRMTable()" placeholder="Search name or phone..." class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold"></div>
         </div>
-
         <div class="flex-1 overflow-x-auto mt-4">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="border-b border-brand-border text-slate-400 font-bold uppercase text-[10px] tracking-wider bg-brand-dark/40">
-                <th class="p-3">Customer Name</th>
-                <th class="p-3">Phone Number</th>
-                <th class="p-3">Default Location</th>
-                <th class="p-3 text-center">Orders Count</th>
-                <th class="p-3 text-right">Lifetime Value (LTV)</th>
-                <th class="p-3 text-center">Customer Tier</th>
-                <th class="p-3 text-center">Quick Connect</th>
+                <th class="p-3">Name</th><th class="p-3">Phone</th><th class="p-3">Address</th>
+                <th class="p-3 text-center">Orders</th><th class="p-3 text-right">Total Spent</th>
+                <th class="p-3 text-center">Tier</th><th class="p-3 text-center">Contact</th>
               </tr>
             </thead>
-            <tbody id="crmTableBody" class="divide-y divide-brand-border/60 text-slate-200">
-              <!-- Dynamically Populated -->
-            </tbody>
+            <tbody id="crmTableBody" class="divide-y divide-brand-border/60 text-slate-200"></tbody>
           </table>
         </div>
-
       </div>
     </div>
 
-    <!-- ==================== TAB 5: DAY-END CASH AUDIT & EXPENSE ==================== -->
+    <!-- ==================== TAB 5: DAY-END ==================== -->
     <div id="panel_cash" class="tab-panel hidden flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-      
-      <!-- Expense Entry Panel (5 Cols) -->
       <div class="lg:col-span-5 bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl space-y-4">
         <div>
-          <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-wallet text-brand-gold"></i> Petty Cash Expense Tracker
-          </h2>
-          <p class="text-[11px] text-slate-400">Log tea, snacks, courier fees, and store utilities</p>
+          <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-wallet text-brand-gold"></i> Expenses</h2>
+          <p class="text-[11px] text-slate-400">Courier, packaging, tea, utilities</p>
         </div>
-
         <form onsubmit="handleExpenseSubmit(event)" class="space-y-3 bg-brand-dark/90 p-3.5 rounded-2xl border border-brand-border">
           <div>
-            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Expense Title / Reason *</label>
-            <input type="text" id="expenseReason" required placeholder="e.g. Courier Charge, Bottle caps, Tea" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Reason *</label>
+            <input type="text" id="expenseReason" required placeholder="e.g. Courier charge, bottles" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
           </div>
-
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Amount (BDT) *</label>
-              <input type="number" id="expenseAmount" required min="1" placeholder="Amount" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
+              <input type="number" id="expenseAmount" required min="1" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
             </div>
             <div>
               <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Paid From</label>
@@ -618,139 +458,73 @@
               </select>
             </div>
           </div>
-
-          <button type="submit" class="w-full py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-minus-circle"></i> Log Expense Entry
-          </button>
+          <button type="submit" class="w-full py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"><i class="fa-solid fa-minus-circle"></i> Log Expense</button>
         </form>
-
-        <!-- Expense Table -->
         <div class="border border-brand-border rounded-2xl overflow-hidden max-h-56 overflow-y-auto">
           <table class="w-full text-left text-xs">
-            <thead class="bg-brand-dark text-slate-400 uppercase font-bold text-[10px]">
-              <tr><th class="p-2.5">Time</th><th class="p-2.5">Reason</th><th class="p-2.5 text-right">Amount</th><th class="p-2.5"></th></tr>
-            </thead>
-            <tbody id="expensesTableBody" class="divide-y divide-brand-border/60 text-slate-300">
-              <!-- Dynamically Populated -->
-            </tbody>
+            <thead class="bg-brand-dark text-slate-400 uppercase font-bold text-[10px]"><tr><th class="p-2.5">Time</th><th class="p-2.5">Reason</th><th class="p-2.5 text-right">Amount</th><th class="p-2.5"></th></tr></thead>
+            <tbody id="expensesTableBody" class="divide-y divide-brand-border/60 text-slate-300"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Cash Reconciliation & Audit (7 Cols) -->
       <div class="lg:col-span-7 bg-brand-surface border border-brand-border rounded-3xl p-5 shadow-xl space-y-4">
         <div>
-          <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-calculator text-brand-gold"></i> Daily Register Closing Audit
-          </h2>
-          <p class="text-[11px] text-slate-400">Match physical cash count with digital register ledger</p>
+          <h2 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-calculator text-brand-gold"></i> Daily Closing</h2>
+          <p class="text-[11px] text-slate-400">Match physical cash with the system (COD counts once marked Delivered)</p>
         </div>
-
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Opening Balance Setup -->
           <div class="p-4 bg-brand-dark/90 border border-brand-border rounded-2xl space-y-2">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Opening Cash in Register</label>
-            <div class="flex items-center gap-2">
-              <span class="text-base font-bold text-brand-gold">৳</span>
-              <input type="number" id="openingCashAmount" value="500" min="0" oninput="calculateRegisterAudit()" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-brand-gold">
-            </div>
-            <p class="text-[10px] text-slate-500">Petty cash left in drawer at morning opening</p>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Opening Cash</label>
+            <div class="flex items-center gap-2"><span class="text-base font-bold text-brand-gold">৳</span>
+              <input type="number" id="openingCashAmount" value="500" min="0" oninput="calculateRegisterAudit()" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-brand-gold"></div>
           </div>
-
-          <!-- Physical Cash Count Input -->
           <div class="p-4 bg-brand-dark/90 border border-brand-border rounded-2xl space-y-2">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Physical Cash Count at Night</label>
-            <div class="flex items-center gap-2">
-              <span class="text-base font-bold text-emerald-400">৳</span>
-              <input type="number" id="physicalCashCount" value="0" min="0" oninput="calculateRegisterAudit()" placeholder="Enter counted cash" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-brand-gold">
-            </div>
-            <p class="text-[10px] text-slate-500">Total paper notes & coins counted in drawer</p>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Physical Cash Count</label>
+            <div class="flex items-center gap-2"><span class="text-base font-bold text-emerald-400">৳</span>
+              <input type="number" id="physicalCashCount" value="0" min="0" oninput="calculateRegisterAudit()" class="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-brand-gold"></div>
           </div>
         </div>
-
-        <!-- Audit Summary Calculation Sheet -->
         <div class="p-4 bg-brand-dark/70 border border-brand-border rounded-2xl space-y-3 font-mono text-xs">
-          <div class="flex justify-between text-slate-300">
-            <span>(+) Opening Float:</span>
-            <span id="auditOpeningFloat">৳500</span>
-          </div>
-          <div class="flex justify-between text-slate-300">
-            <span>(+) Today's Cash Sales:</span>
-            <span id="auditCashSales">৳0</span>
-          </div>
-          <div class="flex justify-between text-rose-400">
-            <span>(-) Cash Expenses Paid:</span>
-            <span id="auditCashExpenses">৳0</span>
-          </div>
-          <div class="pt-2 border-t border-brand-border flex justify-between font-bold text-sm text-slate-100">
-            <span>(=) Expected Cash in Drawer:</span>
-            <span id="auditExpectedCash" class="text-brand-gold">৳500</span>
-          </div>
-          <div class="pt-1 flex justify-between font-bold text-sm">
-            <span>Variance (Difference):</span>
-            <span id="auditVariance" class="text-slate-400">৳0 (Balanced)</span>
-          </div>
+          <div class="flex justify-between text-slate-300"><span>(+) Opening Cash:</span><span id="auditOpeningFloat">৳500</span></div>
+          <div class="flex justify-between text-slate-300"><span>(+) Today's Cash Sales:</span><span id="auditCashSales">৳0</span></div>
+          <div class="flex justify-between text-rose-400"><span>(-) Cash Expenses:</span><span id="auditCashExpenses">৳0</span></div>
+          <div class="pt-2 border-t border-brand-border flex justify-between font-bold text-sm text-slate-100"><span>(=) Expected Cash:</span><span id="auditExpectedCash" class="text-brand-gold">৳500</span></div>
+          <div class="pt-1 flex justify-between font-bold text-sm"><span>Variance:</span><span id="auditVariance" class="text-slate-400">Pending</span></div>
         </div>
-
+        <div class="p-4 bg-brand-dark/70 border border-brand-border rounded-2xl text-xs">
+          <h3 class="font-bold uppercase tracking-wider text-slate-300 text-[11px] mb-2">Today's Best Sellers</h3>
+          <div id="bestSellersList" class="space-y-1 text-slate-300"></div>
+        </div>
       </div>
-
     </div>
-
   </main>
 
-  <!-- ================= INLINE 80mm THERMAL RECEIPT (PRINT AREA ONLY) ================= -->
-  <div id="printableReceipt" class="hidden">
-    <!-- Populated dynamically during print execution -->
-  </div>
+  <div id="printableReceipt" class="hidden"></div>
 
-  <!-- ================= MODAL: NEW INVENTORY ITEM ================= -->
+  <!-- Modal -->
   <div id="inventoryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-brand-surface border border-brand-border w-full max-w-md rounded-3xl p-6 text-slate-100 shadow-2xl relative">
       <div class="flex items-center justify-between pb-3 border-b border-brand-border mb-4">
-        <h3 class="font-bold text-sm text-brand-gold flex items-center gap-2">
-          <i class="fa-solid fa-plus-circle"></i> Add Fragrance SKU
-        </h3>
-        <button onclick="closeNewInventoryItemModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-base"></i>
-        </button>
+        <h3 class="font-bold text-sm text-brand-gold flex items-center gap-2"><i class="fa-solid fa-plus-circle"></i> Add Fragrance</h3>
+        <button onclick="closeNewInventoryItemModal()" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-base"></i></button>
       </div>
-
       <form onsubmit="handleNewInventoryItemSubmit(event)" class="space-y-3">
         <div>
           <label class="block text-[11px] font-semibold text-slate-300 mb-1">Fragrance Name *</label>
-          <input type="text" id="newSkuName" required placeholder="e.g. Dior Sauvage Elixir" class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Category</label>
-            <select id="newSkuCategory" class="w-full bg-brand-dark border border-brand-border rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
-              <option value="ATTAR">Perfume Oil / Attar</option>
-              <option value="EDP">Spray EDP</option>
-              <option value="CUSTOM">Bespoke</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Default Price (৳)</label>
-            <input type="number" id="newSkuPrice" value="190" min="0" class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
-          </div>
+          <input type="text" id="newSkuName" required class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
         </div>
         <div>
           <label class="block text-[11px] font-semibold text-slate-300 mb-1">Initial Stock (Bottles)</label>
           <input type="number" id="newSkuStock" value="25" min="0" class="w-full bg-brand-dark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-gold">
         </div>
-
-        <button type="submit" class="w-full py-3 bg-brand-gold hover:bg-brand-goldHover text-brand-dark font-extrabold text-xs uppercase tracking-wider rounded-xl transition mt-2 shadow-lg">
-          Save Fragrance to Inventory
-        </button>
+        <button type="submit" class="w-full py-3 bg-brand-gold hover:bg-brand-goldHover text-brand-dark font-extrabold text-xs uppercase tracking-wider rounded-xl transition mt-2 shadow-lg">Save to Inventory</button>
       </form>
     </div>
   </div>
 
-  <!-- ================= JAVASCRIPT APPLICATION CORE ================= -->
   <script>
-    // ----------------------------------------------------
-    // SYSTEM CONSTANTS & LOCAL STORAGE KEYS
-    // ----------------------------------------------------
+    // ---------------- CONSTANTS ----------------
     const AUTH_SESSION_KEY = 'ELVAREN_AUTH_ACTIVE_SESSION';
     const ORDERS_STORAGE_KEY = 'ELVAREN_RETAIL_ORDERS_STORE_V3';
     const INVENTORY_STORAGE_KEY = 'ELVAREN_INVENTORY_STOCK_STORE_V3';
@@ -760,153 +534,118 @@
     const AUTH_USER = 'mahinihfajsaimon';
     const AUTH_PASS = 'mahinihfajsaimon';
 
-    // ----------------------------------------------------
-    // APPLICATION STATE
-    // ----------------------------------------------------
+    const BULK_QTY = 5;        // every 5 bottles
+    const BULK_DISCOUNT = 50;  // ৳50 off
+
     let cart = [];
     let activeSizePreset = { size: '6ml Roll-on', price: 190 };
     let activePaymentMethod = 'Cash';
-    let desktopFileHandle = null; // Direct File System Access API pointer
+    let deliveryFee = 0;
+    let desktopFileHandle = null;
 
-    // Initial Signature Fragrance Master
+    // Only the first 5 fragrances
     const DEFAULT_FRAGRANCES = [
       { id: 'FR-01', name: 'Vampire Blood', category: 'ATTAR', price: 190, stock: 45, icon: '🍷' },
       { id: 'FR-02', name: 'Creed Aventus', category: 'ATTAR', price: 190, stock: 32, icon: '👑' },
       { id: 'FR-03', name: 'ADG Profumo', category: 'ATTAR', price: 190, stock: 28, icon: '🌊' },
       { id: 'FR-04', name: 'Layton', category: 'ATTAR', price: 190, stock: 24, icon: '🐎' },
-      { id: 'FR-05', name: 'Valentino', category: 'ATTAR', price: 190, stock: 30, icon: '✨' },
-      { id: 'FR-06', name: 'নিশা (Nisha)', category: 'ATTAR', price: 190, stock: 50, icon: '🌙' },
-      { id: 'FR-07', name: 'স্বপ্নিল (Shopnil)', category: 'ATTAR', price: 190, stock: 40, icon: '☁️' },
-      { id: 'FR-08', name: 'অরণ্য (Oronno)', category: 'ATTAR', price: 190, stock: 35, icon: '🌲' },
-      { id: 'FR-09', name: 'স্বপ্ন মায়া (Shopno Maya)', category: 'ATTAR', price: 190, stock: 30, icon: '🔮' },
-      { id: 'FR-10', name: "ভ্যানিল ডি'অর (Vanille D'Or)", category: 'ATTAR', price: 190, stock: 22, icon: '🍨' },
-      { id: 'FR-11', name: "অ্যাঞ্জেলস নেক্টার (Angels' Nectar)", category: 'ATTAR', price: 190, stock: 18, icon: '🍯' }
+      { id: 'FR-05', name: 'Valentino', category: 'ATTAR', price: 190, stock: 30, icon: '✨' }
     ];
+    const REMOVED_IDS = ['FR-06','FR-07','FR-08','FR-09','FR-10','FR-11'];
 
-    // Web Audio Synthesizer (Zero External Assets)
-    function playBeep(type = 'success') {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        if (type === 'success') {
-          osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-          osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // A5
-          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.15);
-        } else if (type === 'add') {
-          osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.08);
-        } else {
-          osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.25);
-        }
-      } catch (e) {
-        // AudioContext silent fallback
-      }
+    // ---------------- HELPERS ----------------
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
-
-    // Number Formatter
     function formatBDT(val) {
       return new Intl.NumberFormat('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val || 0);
     }
+    function todayStr() { return new Date().toLocaleDateString('en-GB'); }
 
-    // Toast Generator
+    function playBeep(type = 'success') {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator(); const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        if (type === 'success') {
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+          osc.start(); osc.stop(ctx.currentTime + 0.15);
+        } else if (type === 'add') {
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          osc.start(); osc.stop(ctx.currentTime + 0.08);
+        } else {
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+          osc.start(); osc.stop(ctx.currentTime + 0.25);
+        }
+      } catch (e) {}
+    }
+
     function notify(message, type = 'success') {
       const container = document.getElementById('toastStack');
       const toast = document.createElement('div');
       toast.className = `px-4 py-3 rounded-2xl text-xs font-bold shadow-2xl transition-all duration-300 transform translate-y-3 opacity-0 pointer-events-auto flex items-center gap-2.5 ${
-        type === 'success' 
-          ? 'bg-emerald-950/90 text-emerald-300 border border-emerald-600/60 backdrop-blur-md' 
-          : 'bg-rose-950/90 text-rose-300 border border-rose-600/60 backdrop-blur-md'
-      }`;
-      toast.innerHTML = `
-        <span class="text-sm">${type === 'success' ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-exclamation"></i>'}</span>
-        <span>${message}</span>
-      `;
+        type === 'success' ? 'bg-emerald-950/90 text-emerald-300 border border-emerald-600/60 backdrop-blur-md'
+                           : 'bg-rose-950/90 text-rose-300 border border-rose-600/60 backdrop-blur-md'}`;
+      toast.innerHTML = `<span class="text-sm">${type === 'success' ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-exclamation"></i>'}</span><span>${esc(message)}</span>`;
       container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.classList.remove('translate-y-3', 'opacity-0');
-      }, 30);
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-3');
-        setTimeout(() => toast.remove(), 300);
-      }, 3200);
+      setTimeout(() => toast.classList.remove('translate-y-3', 'opacity-0'), 30);
+      setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-3'); setTimeout(() => toast.remove(), 300); }, 3200);
     }
 
-    // ----------------------------------------------------
-    // 1. AUTHENTICATION CONTROLLER
-    // ----------------------------------------------------
+    function normalizePhone(p) {
+      let d = String(p || '').replace(/[^0-9]/g, '');
+      if (d.startsWith('880')) d = '0' + d.slice(3);
+      else if (d.startsWith('88')) d = d.slice(2);
+      return d;
+    }
+    function isValidBDPhone(p) { return /^01[3-9]\d{8}$/.test(normalizePhone(p)); }
+
+    // ---------------- AUTH ----------------
     function checkAuthentication() {
-      const isAuth = sessionStorage.getItem(AUTH_SESSION_KEY);
-      const authScreen = document.getElementById('authScreen');
-      if (isAuth === 'true') {
-        authScreen.classList.add('hidden');
-      } else {
-        authScreen.classList.remove('hidden');
-      }
+      document.getElementById('authScreen').classList.toggle('hidden', sessionStorage.getItem(AUTH_SESSION_KEY) === 'true');
     }
-
     function handleUserLogin(e) {
       e.preventDefault();
       const u = document.getElementById('loginUsername').value.trim();
       const p = document.getElementById('loginPassword').value.trim();
       const errBox = document.getElementById('authErrorAlert');
-
       if (u === AUTH_USER && p === AUTH_PASS) {
         sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
         errBox.classList.add('hidden');
         document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
         playBeep('success');
-        notify('Terminal Unlocked. Welcome, Mahin!');
+        notify('Terminal unlocked. Welcome, Mahin!');
       } else {
         errBox.classList.remove('hidden');
         playBeep('error');
       }
     }
-
     function handleUserLogout() {
       sessionStorage.removeItem(AUTH_SESSION_KEY);
       document.getElementById('loginUsername').value = '';
       document.getElementById('loginPassword').value = '';
       document.getElementById('authScreen').classList.remove('hidden');
       playBeep('error');
-      notify('Terminal Locked.');
     }
-
     function togglePasswordVisibility() {
-      const field = document.getElementById('loginPassword');
-      const icon = document.getElementById('togglePassIcon');
-      if (field.type === 'password') {
-        field.type = 'text';
-        icon.classList.replace('fa-eye-slash', 'fa-eye');
-      } else {
-        field.type = 'password';
-        icon.classList.replace('fa-eye', 'fa-eye-slash');
-      }
+      const f = document.getElementById('loginPassword'), i = document.getElementById('togglePassIcon');
+      if (f.type === 'password') { f.type = 'text'; i.classList.replace('fa-eye-slash', 'fa-eye'); }
+      else { f.type = 'password'; i.classList.replace('fa-eye', 'fa-eye-slash'); }
     }
 
-    // ----------------------------------------------------
-    // 2. NAVIGATION TAB SWITCHER
-    // ----------------------------------------------------
+    // ---------------- TABS ----------------
     function switchTab(target) {
-      const tabs = ['pos', 'orders', 'inventory', 'crm', 'cash'];
-      tabs.forEach(t => {
-        const panel = document.getElementById(`panel_${t}`);
-        const btn = document.getElementById(`tabBtn_${t}`);
+      ['pos', 'orders', 'inventory', 'crm', 'cash'].forEach(t => {
+        const panel = document.getElementById(`panel_${t}`), btn = document.getElementById(`tabBtn_${t}`);
         if (t === target) {
           panel.classList.remove('hidden');
           btn.className = "tab-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand-gold text-brand-dark shadow-sm";
@@ -915,169 +654,107 @@
           btn.className = "tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5";
         }
       });
-
       if (target === 'orders') renderOrdersLogTable();
       if (target === 'inventory') renderInventoryTable();
       if (target === 'crm') renderCRMTable();
       if (target === 'cash') calculateRegisterAudit();
     }
 
-    // ----------------------------------------------------
-    // 3. DESKTOP EXCEL FILE STREAMING (File System API)
-    // ----------------------------------------------------
-    async function connectDesktopExcelFile() {
-      if (!('showSaveFilePicker' in window)) {
-        notify("Your browser does not support direct desktop file streaming. Use Chrome or Edge on PC.", "error");
-        return;
-      }
+    // ---------------- EXCEL ----------------
+    const CSV_HEADER = "Order ID,Date,Time,Customer Name,Phone,Address,Source,Items,Subtotal,Discount,Delivery,Grand Total,Payment,Status,Note\n";
 
+    function orderToCsvRow(o) {
+      const items = o.items.map(i => `${i.name} [${i.size}] x${i.qty}`).join('; ');
+      const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      return [q(o.id), q(o.date), q(o.time), q(o.customer.name), q(o.customer.phone), q(o.customer.address),
+              q(o.source || ''), q(items), o.subtotal, o.discount, o.delivery, o.grandTotal,
+              q(o.paymentMethod), q(o.status || 'Pending'), q(o.note || '')].join(',') + "\n";
+    }
+
+    async function connectDesktopExcelFile() {
+      if (!('showSaveFilePicker' in window)) return notify("Use Chrome or Edge on PC for direct file streaming.", "error");
       try {
         desktopFileHandle = await window.showSaveFilePicker({
           suggestedName: 'Elvaren_Master_Sales.csv',
-          types: [{
-            description: 'Microsoft Excel CSV Document',
-            accept: { 'text/csv': ['.csv'], 'text/plain': ['.txt'] }
-          }]
+          types: [{ description: 'CSV (Excel)', accept: { 'text/csv': ['.csv'] } }]
         });
-
         const file = await desktopFileHandle.getFile();
         const content = await file.text();
-
         document.getElementById('excelSyncIcon').innerText = '🟢';
         document.getElementById('excelSyncLabel').innerText = `Linked: ${file.name}`;
-        document.getElementById('excelSyncBtn').className = "flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm";
-
-        // Prepend UTF-8 BOM and Header if newly created
         if (!content.trim()) {
-          const header = "Order ID,Date,Time,Customer Name,Phone,Address,Items Breakdown,Subtotal (BDT),Discount,Delivery,Grand Total (BDT),Payment Method\n";
-          const writable = await desktopFileHandle.createWritable();
-          await writable.write('\uFEFF' + header);
-          await writable.close();
+          const w = await desktopFileHandle.createWritable();
+          await w.write('\uFEFF' + CSV_HEADER);
+          await w.close();
         }
-
         playBeep('success');
-        notify(`Local Excel Linked: ${file.name}. Every order appends live!`);
+        notify(`Linked ${file.name}. Every order will be appended.`);
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error(err);
-          notify("Failed to link local file.", "error");
-        }
+        if (err.name !== 'AbortError') { console.error(err); notify("Failed to link file.", "error"); }
       }
     }
 
     async function streamOrderToDesktopExcel(order) {
-      if (!desktopFileHandle) return; // Silent if user didn't choose to link
-
+      if (!desktopFileHandle) return;
       try {
         const file = await desktopFileHandle.getFile();
         const existing = await file.text();
-        const itemsText = order.items.map(i => `${i.name} [${i.size}] x${i.qty} (৳${i.total})`).join('; ');
-
-        const row = [
-          `"${order.id}"`,
-          `"${order.date}"`,
-          `"${order.time}"`,
-          `"${order.customer.name.replace(/"/g, '""')}"`,
-          `"${order.customer.phone}"`,
-          `"${(order.customer.address || '').replace(/"/g, '""')}"`,
-          `"${itemsText.replace(/"/g, '""')}"`,
-          order.subtotal,
-          order.discount,
-          order.delivery,
-          order.grandTotal,
-          `"${order.paymentMethod}"`
-        ].join(',') + "\n";
-
-        const writable = await desktopFileHandle.createWritable();
-        if (!existing.trim()) {
-          const header = "Order ID,Date,Time,Customer Name,Phone,Address,Items Breakdown,Subtotal (BDT),Discount,Delivery,Grand Total (BDT),Payment Method\n";
-          await writable.write('\uFEFF' + header + row);
-        } else {
-          await writable.write(existing + row);
-        }
-        await writable.close();
-        notify("Appended live row to desktop Excel!");
-      } catch (err) {
-        console.error("Desktop write error:", err);
-      }
+        const w = await desktopFileHandle.createWritable();
+        await w.write(existing.trim() ? existing + orderToCsvRow(order) : '\uFEFF' + CSV_HEADER + orderToCsvRow(order));
+        await w.close();
+      } catch (err) { console.error("Desktop write error:", err); }
     }
 
-    // SheetJS Pure .xlsx File Export
     function exportSheetJSXlsx() {
       const orders = getStoredOrders();
-      if (orders.length === 0) {
-        notify("No logged orders available to export.", "error");
-        return;
-      }
-
+      if (!orders.length) return notify("No orders to export.", "error");
       const rows = orders.map(o => ({
-        "Order ID": o.id,
-        "Date": o.date,
-        "Time": o.time,
-        "Customer Name": o.customer.name,
-        "Phone Number": o.customer.phone,
-        "Delivery Area": o.customer.address,
-        "Items Summary": o.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('; '),
-        "Subtotal (BDT)": o.subtotal,
-        "Discount (BDT)": o.discount,
-        "Delivery (BDT)": o.delivery,
-        "Grand Total (BDT)": o.grandTotal,
-        "Payment Channel": o.paymentMethod
+        "Order ID": o.id, "Date": o.date, "Time": o.time,
+        "Customer": o.customer.name, "Phone": o.customer.phone, "Address": o.customer.address,
+        "Source": o.source || '', "Items": o.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('; '),
+        "Subtotal": o.subtotal, "Discount": o.discount, "Delivery": o.delivery, "Grand Total": o.grandTotal,
+        "Payment": o.paymentMethod, "Status": o.status || 'Pending', "Note": o.note || ''
       }));
-
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Sales Registry");
+      const ws = XLSX.utils.json_to_sheet(rows), wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sales");
       XLSX.writeFile(wb, `Elvaren_Sales_${new Date().toISOString().split('T')[0]}.xlsx`);
       playBeep('success');
-      notify("Downloaded genuine .xlsx workbook!");
+      notify("Downloaded .xlsx file!");
     }
 
     function exportCSVOrders() {
       const orders = getStoredOrders();
-      if (orders.length === 0) return notify("No sales found.", "error");
-
-      let csv = '\uFEFFOrder ID,Date,Time,Customer Name,Phone,Address,Items,Subtotal,Discount,Delivery,Total,Payment\n';
-      orders.forEach(o => {
-        const items = o.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join('; ');
-        csv += `"${o.id}","${o.date}","${o.time}","${o.customer.name}","${o.customer.phone}","${o.customer.address}","${items}",${o.subtotal},${o.discount},${o.delivery},${o.grandTotal},"${o.paymentMethod}"\n`;
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+      if (!orders.length) return notify("No orders found.", "error");
+      const csv = '\uFEFF' + CSV_HEADER + orders.map(orderToCsvRow).join('');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `Elvaren_Sales_Backup_${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
+      a.href = url; a.download = `Elvaren_Sales_Backup_${new Date().toISOString().split('T')[0]}.csv`; a.click();
     }
 
-    // ----------------------------------------------------
-    // 4. INVENTORY & CATALOG LOGIC
-    // ----------------------------------------------------
+    // ---------------- INVENTORY / CATALOG ----------------
     function getStoredInventory() {
-      const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
-      if (!raw) {
+      let items;
+      try { items = JSON.parse(localStorage.getItem(INVENTORY_STORAGE_KEY) || 'null'); } catch (e) { items = null; }
+      if (!items) {
         localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(DEFAULT_FRAGRANCES));
-        return DEFAULT_FRAGRANCES;
+        return JSON.parse(JSON.stringify(DEFAULT_FRAGRANCES));
       }
-      return JSON.parse(raw);
+      // remove old perfumes (keeps stock counts of the 5 that remain)
+      const cleaned = items.filter(i => !REMOVED_IDS.includes(i.id));
+      if (cleaned.length !== items.length) localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(cleaned));
+      return cleaned;
     }
-
     function saveInventory(items) {
       localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(items));
-      renderCatalogGrid();
-      renderInventoryTable();
-      updateTopMetrics();
+      renderCatalogGrid(); renderInventoryTable(); updateTopMetrics();
     }
 
     function setDefaultActiveSize(size, price) {
       activeSizePreset = { size, price };
       document.querySelectorAll('.size-pill').forEach(btn => {
-        if (btn.innerText.includes(size.split(' ')[0])) {
-          btn.className = "size-pill active px-3 py-1 rounded-lg border border-brand-gold bg-brand-gold/20 text-brand-gold font-bold";
-        } else {
-          btn.className = "size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600";
-        }
+        btn.className = btn.dataset.size === size
+          ? "size-pill px-3 py-1 rounded-lg border border-brand-gold bg-brand-gold/20 text-brand-gold font-bold"
+          : "size-pill px-3 py-1 rounded-lg border border-brand-border bg-brand-dark text-slate-300 font-semibold hover:border-slate-600";
       });
       renderCatalogGrid();
     }
@@ -1086,139 +763,89 @@
       const grid = document.getElementById('catalogGrid');
       const query = (document.getElementById('catalogSearchQuery')?.value || '').toLowerCase();
       const cat = document.getElementById('catalogCategoryFilter')?.value || 'ALL';
-      const inventory = getStoredInventory();
+      const filtered = getStoredInventory().filter(f => f.name.toLowerCase().includes(query) && (cat === 'ALL' || f.category === cat));
 
-      const filtered = inventory.filter(f => {
-        const nameMatch = f.name.toLowerCase().includes(query);
-        const catMatch = (cat === 'ALL') || (f.category === cat);
-        return nameMatch && catMatch;
-      });
-
-      if (filtered.length === 0) {
-        grid.innerHTML = '<div class="col-span-full py-12 text-center text-xs text-slate-500">No fragrances match your filter.</div>';
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="col-span-full py-12 text-center text-xs text-slate-500">No fragrances found.</div>';
         return;
       }
-
       grid.innerHTML = filtered.map(item => `
-        <div onclick="quickAddCatalogItemToCart('${item.name}', ${item.price}, '${item.id}')" class="group bg-brand-dark hover:bg-brand-card border border-brand-border hover:border-brand-gold/70 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-200 transform hover:-translate-y-0.5 shadow-md">
+        <div onclick="quickAddCatalogItemToCart('${item.id}')" class="group bg-brand-dark hover:bg-brand-card border border-brand-border hover:border-brand-gold/70 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-200 transform hover:-translate-y-0.5 shadow-md ${item.stock <= 0 ? 'opacity-60' : ''}">
           <div>
             <div class="flex items-center justify-between mb-2">
               <span class="text-xl">${item.icon || '✨'}</span>
-              <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.stock <= 5 ? 'bg-rose-950/80 text-rose-400 border border-rose-800' : 'bg-slate-800 text-slate-400'}">
-                ${item.stock} left
-              </span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.stock <= 5 ? 'bg-rose-950/80 text-rose-400 border border-rose-800' : 'bg-slate-800 text-slate-400'}">${item.stock <= 0 ? 'Out' : item.stock + ' left'}</span>
             </div>
-            <h4 class="text-xs font-bold text-white group-hover:text-brand-gold transition line-clamp-1">${item.name}</h4>
-            <p class="text-[10px] text-slate-400 mt-0.5">${activeSizePreset.size}</p>
+            <h4 class="text-xs font-bold text-white group-hover:text-brand-gold transition line-clamp-1">${esc(item.name)}</h4>
+            <p class="text-[10px] text-slate-400 mt-0.5">${esc(activeSizePreset.size)}</p>
           </div>
           <div class="flex items-center justify-between mt-3 pt-2 border-t border-brand-border/60">
             <span class="font-extrabold text-xs text-slate-200 font-mono">৳${formatBDT(activeSizePreset.price)}</span>
-            <span class="w-6 h-6 rounded-lg bg-brand-gold/10 group-hover:bg-brand-gold text-brand-gold group-hover:text-brand-dark flex items-center justify-center text-xs font-bold transition">
-              <i class="fa-solid fa-plus text-[10px]"></i>
-            </span>
+            <span class="w-6 h-6 rounded-lg bg-brand-gold/10 group-hover:bg-brand-gold text-brand-gold group-hover:text-brand-dark flex items-center justify-center text-xs font-bold transition"><i class="fa-solid fa-plus text-[10px]"></i></span>
           </div>
-        </div>
-      `).join('');
-    }
-
-    function filterCatalogGrid() {
-      renderCatalogGrid();
+        </div>`).join('');
     }
 
     function toggleCustomItemBox() {
-      const box = document.getElementById('customItemCollapse');
-      const caret = document.getElementById('customItemCaret');
-      box.classList.toggle('hidden');
-      caret.classList.toggle('fa-chevron-up');
-      caret.classList.toggle('fa-chevron-down');
+      document.getElementById('customItemCollapse').classList.toggle('hidden');
+      const c = document.getElementById('customItemCaret');
+      c.classList.toggle('fa-chevron-up'); c.classList.toggle('fa-chevron-down');
     }
 
     function addBespokeItemToCart() {
       const name = document.getElementById('bespokeName').value.trim();
       const size = document.getElementById('bespokeSize').value;
       const price = parseFloat(document.getElementById('bespokePrice').value) || 190;
-
-      if (!name) return notify("Enter custom fragrance name.", "error");
-
+      if (!name) return notify("Enter custom item name.", "error");
       addItemToCartCore(name, size, price, 'CUSTOM');
       document.getElementById('bespokeName').value = '';
       playBeep('add');
     }
 
-    function quickAddCatalogItemToCart(name, defaultPrice, skuId) {
-      // Use active size preset
-      addItemToCartCore(name, activeSizePreset.size, activeSizePreset.price, skuId);
+    function quickAddCatalogItemToCart(skuId) {
+      const item = getStoredInventory().find(i => i.id === skuId);
+      if (!item) return;
+      const inCart = cart.filter(c => c.skuId === skuId).reduce((s, c) => s + c.qty, 0);
+      if (inCart + 1 > item.stock) notify(`${item.name}: only ${item.stock} in stock!`, "error");
+      addItemToCartCore(item.name, activeSizePreset.size, activeSizePreset.price, skuId);
       playBeep('add');
     }
 
-    // ----------------------------------------------------
-    // 5. CART & CHECKOUT CONTROLLER
-    // ----------------------------------------------------
+    // ---------------- CART ----------------
     function addItemToCartCore(name, size, price, skuId) {
-      const existing = cart.find(i => i.name === name && i.size === size && i.price === price);
-      if (existing) {
-        existing.qty += 1;
-        existing.total = existing.qty * existing.price;
-      } else {
-        cart.push({
-          skuId: skuId || 'CUSTOM',
-          name: name,
-          size: size,
-          price: price,
-          qty: 1,
-          total: price
-        });
-      }
-      renderCartDrawer();
-      recalculateTotals();
+      const ex = cart.find(i => i.name === name && i.size === size && i.price === price);
+      if (ex) { ex.qty += 1; ex.total = ex.qty * ex.price; }
+      else cart.push({ skuId: skuId || 'CUSTOM', name, size, price, qty: 1, total: price });
+      renderCartDrawer(); recalculateTotals();
     }
-
     function updateCartItemQty(idx, change) {
       cart[idx].qty += change;
-      if (cart[idx].qty <= 0) {
-        cart.splice(idx, 1);
-      } else {
-        cart[idx].total = cart[idx].qty * cart[idx].price;
-      }
-      renderCartDrawer();
-      recalculateTotals();
+      if (cart[idx].qty <= 0) cart.splice(idx, 1); else cart[idx].total = cart[idx].qty * cart[idx].price;
+      renderCartDrawer(); recalculateTotals();
     }
+    function removeCartItem(idx) { cart.splice(idx, 1); renderCartDrawer(); recalculateTotals(); }
+    function clearCart() { cart = []; renderCartDrawer(); recalculateTotals(); }
 
-    function removeCartItem(idx) {
-      cart.splice(idx, 1);
-      renderCartDrawer();
-      recalculateTotals();
-    }
-
-    function clearCart() {
-      cart = [];
-      renderCartDrawer();
-      recalculateTotals();
+    // Bulk discount counts only perfume bottles (not gift boxes)
+    function countBottles() {
+      return cart.filter(i => i.size !== 'Gift Packaging Box').reduce((a, i) => a + i.qty, 0);
     }
 
     function renderCartDrawer() {
       const container = document.getElementById('cartItemsList');
-      const countLabel = document.getElementById('cartTotalItemsCount');
-      const totalUnits = cart.reduce((acc, i) => acc + i.qty, 0);
+      const units = cart.reduce((a, i) => a + i.qty, 0);
+      document.getElementById('cartTotalItemsCount').innerText = `${units} ${units === 1 ? 'item' : 'items'}`;
 
-      countLabel.innerText = `${totalUnits} ${totalUnits === 1 ? 'bottle' : 'bottles'}`;
-
-      if (cart.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-6 text-xs text-slate-600 border border-dashed border-brand-border/60 rounded-xl">
-            Cart is empty. Tap any perfume card on the left.
-          </div>
-        `;
+      if (!cart.length) {
+        container.innerHTML = `<div class="text-center py-6 text-xs text-slate-600 border border-dashed border-brand-border/60 rounded-xl">Cart is empty. Tap any perfume on the left.</div>`;
         return;
       }
-
       container.innerHTML = cart.map((item, idx) => `
         <div class="flex items-center justify-between bg-brand-surface p-2 rounded-xl border border-brand-border text-xs">
-          <div class="max-w-[55%]">
-            <span class="font-bold text-white block truncate">${item.name}</span>
-            <span class="text-[10px] text-brand-gold">${item.size} • ৳${formatBDT(item.price)}</span>
+          <div class="max-w-[50%]">
+            <span class="font-bold text-white block truncate">${esc(item.name)}</span>
+            <span class="text-[10px] text-brand-gold">${esc(item.size)} • ৳${formatBDT(item.price)}</span>
           </div>
-
           <div class="flex items-center gap-2">
             <div class="flex items-center border border-brand-border rounded-lg bg-brand-dark">
               <button onclick="updateCartItemQty(${idx}, -1)" class="px-2 py-0.5 text-slate-400 hover:text-white font-bold">-</button>
@@ -1226,726 +853,514 @@
               <button onclick="updateCartItemQty(${idx}, 1)" class="px-2 py-0.5 text-slate-400 hover:text-white font-bold">+</button>
             </div>
             <span class="font-bold text-slate-100 font-mono w-14 text-right">৳${formatBDT(item.total)}</span>
-            <button onclick="removeCartItem(${idx})" class="text-slate-500 hover:text-rose-400 p-1">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
+            <button onclick="removeCartItem(${idx})" class="text-slate-500 hover:text-rose-400 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
+    }
+
+    function setDeliveryFee(fee) {
+      deliveryFee = fee;
+      document.querySelectorAll('.fee-chip').forEach(b => {
+        b.className = (parseInt(b.dataset.fee) === fee)
+          ? "fee-chip p-1.5 rounded-xl border text-xs font-bold border-brand-gold bg-brand-gold/15 text-brand-gold"
+          : "fee-chip p-1.5 rounded-xl border text-xs font-bold border-brand-border bg-brand-surface text-slate-400 hover:border-slate-600";
+      });
+      recalculateTotals();
+    }
+
+    function computeTotals() {
+      const subtotal = cart.reduce((a, i) => a + i.total, 0);
+      const bottles = countBottles();
+      const autoDiscount = Math.min(subtotal, Math.floor(bottles / BULK_QTY) * BULK_DISCOUNT);
+      let manual = parseFloat(document.getElementById('calcDiscount').value) || 0;
+      manual = Math.max(0, Math.min(manual, subtotal - autoDiscount));
+      const discount = autoDiscount + manual;
+      const grandTotal = Math.max(0, subtotal - discount + deliveryFee);
+      return { subtotal, bottles, autoDiscount, manual, discount, delivery: deliveryFee, grandTotal };
     }
 
     function recalculateTotals() {
-      const subtotal = cart.reduce((acc, i) => acc + i.total, 0);
-      const discountInput = document.getElementById('calcDiscount');
-      const deliveryInput = document.getElementById('calcDelivery');
+      const t = computeTotals();
+      const manualInput = document.getElementById('calcDiscount');
+      if ((parseFloat(manualInput.value) || 0) !== t.manual) manualInput.value = t.manual;
 
-      let discount = parseFloat(discountInput.value) || 0;
-      let delivery = parseFloat(deliveryInput.value) || 0;
+      document.getElementById('calcSubtotal').innerText = `৳${formatBDT(t.subtotal)}`;
+      document.getElementById('calcAutoDiscount').innerText = `- ৳${formatBDT(t.autoDiscount)}`;
+      document.getElementById('calcGrandTotal').innerText = `৳${formatBDT(t.grandTotal)}`;
 
-      if (discount > subtotal) {
-        discount = subtotal;
-        discountInput.value = discount;
+      const need = BULK_QTY - (t.bottles % BULK_QTY);
+      const label = document.getElementById('autoDiscountLabel');
+      if (t.autoDiscount > 0) {
+        label.innerText = `🎉 ${t.bottles}টি নিয়েছে — ৳${t.autoDiscount} ছাড় পেয়েছে`;
+      } else {
+        label.innerText = `${BULK_QTY}টি নিলে ৳${BULK_DISCOUNT} ছাড়: আর ${need}টি বাকি`;
       }
-
-      const grandTotal = Math.max(0, subtotal - discount + delivery);
-
-      document.getElementById('calcSubtotal').innerText = `৳${formatBDT(subtotal)}`;
-      document.getElementById('calcGrandTotal').innerText = `৳${formatBDT(grandTotal)}`;
     }
 
     function setCheckoutPayment(method) {
       activePaymentMethod = method;
       document.querySelectorAll('.pay-chip').forEach(chip => {
-        if (chip.innerText.includes(method)) {
-          chip.className = "pay-chip active p-2 rounded-xl border border-brand-gold bg-brand-gold/15 text-brand-gold text-xs font-bold flex flex-col items-center gap-1";
-        } else {
-          chip.className = "pay-chip p-2 rounded-xl border border-brand-border bg-brand-surface text-slate-400 text-xs font-semibold flex flex-col items-center gap-1 hover:border-slate-600";
-        }
+        chip.className = chip.dataset.pay === method
+          ? "pay-chip p-2 rounded-xl border text-xs flex flex-col items-center gap-1 border-brand-gold bg-brand-gold/15 text-brand-gold font-bold"
+          : "pay-chip p-2 rounded-xl border text-xs flex flex-col items-center gap-1 border-brand-border bg-brand-surface text-slate-400 font-semibold hover:border-slate-600";
       });
     }
 
     function handlePhoneLookup(phone) {
-      if (phone.length >= 10) {
-        const customers = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY) || '[]');
-        const match = customers.find(c => c.phone.includes(phone));
+      const badge = document.getElementById('quickCustomerBadge');
+      const norm = normalizePhone(phone);
+      if (norm.length >= 11) {
+        const match = getStoredCustomers().find(c => normalizePhone(c.phone) === norm);
         if (match) {
           document.getElementById('checkoutName').value = match.name;
           document.getElementById('checkoutAddress').value = match.address || '';
-          document.getElementById('quickCustomerBadge').innerText = `VIP Client (${match.totalOrders} past orders)`;
-          document.getElementById('quickCustomerBadge').className = "text-[10px] text-brand-gold font-bold";
+          badge.innerText = `Returning customer (${match.totalOrders} orders)`;
+          badge.className = "text-[10px] text-brand-gold font-bold";
+          return;
         }
       }
+      badge.innerText = "New Customer";
+      badge.className = "text-[10px] text-slate-500";
     }
 
-    async function processCheckoutOrder() {
+    function nextOrderId() {
+      const nums = getStoredOrders().map(o => parseInt(String(o.id).replace(/\D/g, '')) || 0);
+      return `ELV-${Math.max(1000, ...nums) + 1}`;
+    }
+
+    async function processCheckoutOrder(print) {
       const phone = document.getElementById('checkoutPhone').value.trim();
       const name = document.getElementById('checkoutName').value.trim();
       const address = document.getElementById('checkoutAddress').value.trim();
 
-      if (!phone || !name) {
-        playBeep('error');
-        return notify("Customer Name and Phone Number are required!", "error");
-      }
-      if (cart.length === 0) {
-        playBeep('error');
-        return notify("Cart is empty! Add at least one fragrance.", "error");
-      }
+      if (!phone || !name) { playBeep('error'); return notify("Customer name & phone required!", "error"); }
+      if (!isValidBDPhone(phone)) { playBeep('error'); return notify("Phone number invalid (e.g. 017XXXXXXXX).", "error"); }
+      if (!cart.length) { playBeep('error'); return notify("Cart is empty!", "error"); }
 
-      const subtotal = cart.reduce((acc, i) => acc + i.total, 0);
-      const discount = parseFloat(document.getElementById('calcDiscount').value) || 0;
-      const delivery = parseFloat(document.getElementById('calcDelivery').value) || 0;
-      const grandTotal = Math.max(0, subtotal - discount + delivery);
-
+      const t = computeTotals();
       const now = new Date();
-      const orderId = `ELV-${Math.floor(1000 + Math.random() * 9000)}`;
-
-      const orderRecord = {
-        id: orderId,
+      const order = {
+        id: nextOrderId(),
         timestamp: now.toISOString(),
-        date: now.toLocaleDateString('en-GB'),
+        date: todayStr(),
         time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
-        customer: {
-          name: name,
-          phone: phone,
-          address: address || 'Store Counter Sale'
-        },
-        items: [...cart],
-        subtotal: subtotal,
-        discount: discount,
-        delivery: delivery,
-        grandTotal: grandTotal,
-        paymentMethod: activePaymentMethod
+        customer: { name, phone: normalizePhone(phone), address: address || 'Counter Sale' },
+        source: document.getElementById('checkoutSource').value,
+        note: document.getElementById('checkoutNote').value.trim(),
+        items: cart.map(i => ({ ...i })),
+        subtotal: t.subtotal,
+        autoDiscount: t.autoDiscount,
+        discount: t.discount,
+        delivery: t.delivery,
+        grandTotal: t.grandTotal,
+        paymentMethod: activePaymentMethod,
+        // Counter + paid orders are done immediately; delivery orders wait
+        status: (t.delivery > 0 || activePaymentMethod === 'COD') ? 'Pending' : 'Delivered'
       };
 
-      // 1. Save to Local Orders
       const orders = getStoredOrders();
-      orders.unshift(orderRecord);
+      orders.unshift(order);
       localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
 
-      // 2. Reduce Stock in Inventory
-      deductInventoryStock(orderRecord.items);
+      deductInventoryStock(order.items);
+      upsertCustomerProfile(order.customer, order.grandTotal);
+      await streamOrderToDesktopExcel(order);
 
-      // 3. Update Customer CRM Profile
-      upsertCustomerProfile(orderRecord.customer, grandTotal);
-
-      // 4. Stream directly to desktop Excel CSV file
-      await streamOrderToDesktopExcel(orderRecord);
-
-      // 5. Sound and Toast
       playBeep('success');
-      notify(`Order ${orderId} finalized! Printing 80mm slip...`);
+      notify(`Order ${order.id} saved!`);
+      if (print) triggerThermalPrint(order);
 
-      // 6. Generate and Print Thermal Slip
-      triggerThermalPrint(orderRecord);
-
-      // 7. Reset Form
+      // reset
       clearCart();
-      document.getElementById('checkoutPhone').value = '';
-      document.getElementById('checkoutName').value = '';
-      document.getElementById('checkoutAddress').value = '';
+      ['checkoutPhone', 'checkoutName', 'checkoutAddress', 'checkoutNote'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('calcDiscount').value = '0';
-      document.getElementById('calcDelivery').value = '0';
-      document.getElementById('quickCustomerBadge').innerText = "Retail Walk-in";
-      document.getElementById('quickCustomerBadge').className = "text-[10px] text-slate-500";
-
+      setDeliveryFee(0);
+      handlePhoneLookup('');
       updateTopMetrics();
       renderOrdersLogTable();
     }
 
-    // ----------------------------------------------------
-    // 6. 80mm THERMAL RECEIPT ENGINE
-    // ----------------------------------------------------
+    // ---------------- RECEIPT ----------------
     function triggerThermalPrint(order) {
       const printBox = document.getElementById('printableReceipt');
-      
       const itemRows = order.items.map(i => `
-        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-          <div style="max-width:70%;">
-            <b>${i.name}</b><br>
-            <span style="font-size:9px; color:#333;">${i.size} (${i.qty} x ৳${formatBDT(i.price)})</span>
-          </div>
-          <div style="text-align:right; font-weight:bold;">
-            ৳${formatBDT(i.total)}
-          </div>
-        </div>
-      `).join('');
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+          <div style="max-width:70%;"><b>${esc(i.name)}</b><br><span style="font-size:9px;">${esc(i.size)} (${i.qty} x ৳${formatBDT(i.price)})</span></div>
+          <div style="text-align:right; font-weight:bold;">৳${formatBDT(i.total)}</div>
+        </div>`).join('');
+
+      const auto = order.autoDiscount || 0;
+      const manual = Math.max(0, (order.discount || 0) - auto);
 
       printBox.innerHTML = `
-        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
-          <h2 style="font-size: 16px; font-weight: bold; margin: 0; letter-spacing: 2px;">ELVAREN</h2>
-          <p style="margin: 1px 0; font-size: 10px;">Artisanal Perfumery & Pure Attars</p>
-          <p style="margin: 0; font-size: 9px;">Hotline: 01863680414</p>
+        <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+          <h2 style="font-size:16px; font-weight:bold; margin:0; letter-spacing:2px;">ELVAREN</h2>
+          <p style="margin:1px 0; font-size:10px;">Artisanal Perfumery & Pure Attars</p>
+          <p style="margin:0; font-size:9px;">Hotline: 01863680414</p>
         </div>
-
-        <div style="font-size: 10px; margin-bottom: 6px; border-bottom: 1px dashed #000; padding-bottom: 6px;">
-          <div style="display:flex; justify-content:space-between;">
-            <span>Inv: <b>${order.id}</b></span>
-            <span>${order.date} ${order.time}</span>
-          </div>
-          <div style="margin-top: 3px;">
-            <span>Customer: <b>${order.customer.name}</b></span><br>
-            <span>Phone: ${order.customer.phone}</span><br>
-            <span>Destination: ${order.customer.address}</span>
+        <div style="font-size:10px; margin-bottom:6px; border-bottom:1px dashed #000; padding-bottom:6px;">
+          <div style="display:flex; justify-content:space-between;"><span>Inv: <b>${esc(order.id)}</b></span><span>${esc(order.date)} ${esc(order.time)}</span></div>
+          <div style="margin-top:3px;">
+            Customer: <b>${esc(order.customer.name)}</b><br>
+            Phone: ${esc(order.customer.phone)}<br>
+            Address: ${esc(order.customer.address)}
+            ${order.note ? `<br>Note: ${esc(order.note)}` : ''}
           </div>
         </div>
-
-        <div style="border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
-          <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:10px; margin-bottom:4px;">
-            <span>Description</span>
-            <span>Total</span>
-          </div>
+        <div style="border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+          <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:10px; margin-bottom:4px;"><span>Description</span><span>Total</span></div>
           ${itemRows}
         </div>
-
-        <div style="font-size: 10px; line-height: 1.4; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
-          <div style="display:flex; justify-content:space-between;">
-            <span>Subtotal:</span>
-            <span>৳${formatBDT(order.subtotal)}</span>
-          </div>
-          ${order.discount > 0 ? `
-          <div style="display:flex; justify-content:space-between;">
-            <span>Discount:</span>
-            <span>- ৳${formatBDT(order.discount)}</span>
-          </div>` : ''}
-          ${order.delivery > 0 ? `
-          <div style="display:flex; justify-content:space-between;">
-            <span>Delivery:</span>
-            <span>+ ৳${formatBDT(order.delivery)}</span>
-          </div>` : ''}
-          <div style="display:flex; justify-content:space-between; font-size: 13px; font-weight: bold; margin-top: 4px;">
-            <span>Payable:</span>
-            <span>৳${formatBDT(order.grandTotal)}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; font-size: 9px; margin-top: 2px;">
-            <span>Payment Method:</span>
-            <span><b>${order.paymentMethod}</b></span>
-          </div>
+        <div style="font-size:10px; line-height:1.4; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+          <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>৳${formatBDT(order.subtotal)}</span></div>
+          ${auto > 0 ? `<div style="display:flex; justify-content:space-between;"><span>Bulk Discount:</span><span>- ৳${formatBDT(auto)}</span></div>` : ''}
+          ${manual > 0 ? `<div style="display:flex; justify-content:space-between;"><span>Discount:</span><span>- ৳${formatBDT(manual)}</span></div>` : ''}
+          ${order.delivery > 0 ? `<div style="display:flex; justify-content:space-between;"><span>Delivery:</span><span>+ ৳${formatBDT(order.delivery)}</span></div>` : ''}
+          <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-top:4px;"><span>Payable:</span><span>৳${formatBDT(order.grandTotal)}</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:9px; margin-top:2px;"><span>Payment:</span><span><b>${esc(order.paymentMethod)}${order.paymentMethod === 'COD' ? ' (Pay on delivery)' : ''}</b></span></div>
         </div>
-
-        <!-- Simulated Barcode -->
-        <div style="text-align: center; margin: 6px 0;">
-          <svg style="width: 140px; height: 35px; margin: 0 auto;" viewBox="0 0 140 35">
-            <rect width="140" height="35" fill="#fff" />
-            <g fill="#000">
-              <rect x="5" y="0" width="3" height="30" />
-              <rect x="11" y="0" width="2" height="30" />
-              <rect x="16" y="0" width="4" height="30" />
-              <rect x="23" y="0" width="1" height="30" />
-              <rect x="27" y="0" width="3" height="30" />
-              <rect x="33" y="0" width="2" height="30" />
-              <rect x="38" y="0" width="5" height="30" />
-              <rect x="46" y="0" width="2" height="30" />
-              <rect x="51" y="0" width="3" height="30" />
-              <rect x="57" y="0" width="4" height="30" />
-              <rect x="64" y="0" width="1" height="30" />
-              <rect x="68" y="0" width="3" height="30" />
-              <rect x="74" y="0" width="2" height="30" />
-              <rect x="79" y="0" width="4" height="30" />
-              <rect x="86" y="0" width="3" height="30" />
-              <rect x="92" y="0" width="1" height="30" />
-              <rect x="96" y="0" width="4" height="30" />
-              <rect x="103" y="0" width="2" height="30" />
-              <rect x="108" y="0" width="3" height="30" />
-              <rect x="114" y="0" width="2" height="30" />
-              <rect x="119" y="0" width="4" height="30" />
-              <rect x="126" y="0" width="2" height="30" />
-              <rect x="131" y="0" width="3" height="30" />
-            </g>
-          </svg>
-          <div style="font-size: 8px; font-family: monospace;">* ${order.id} *</div>
-        </div>
-
-        <div style="text-align: center; font-size: 9px; color: #333;">
-          <p style="margin: 2px 0;">* Pure Concentration • Long Lasting *</p>
-          <p style="margin: 1px 0;">Keep away from direct heat and sunlight.</p>
-          <p style="margin: 1px 0;">Thank you for shopping with Elvaren!</p>
-        </div>
-      `;
-
+        <div style="text-align:center; font-size:9px;">
+          <p style="margin:2px 0;">* Pure Concentration • Long Lasting *</p>
+          <p style="margin:1px 0;">Keep away from direct heat and sunlight.</p>
+          <p style="margin:1px 0;">Thank you for shopping with Elvaren!</p>
+        </div>`;
       printBox.classList.remove('hidden');
       window.print();
       printBox.classList.add('hidden');
     }
 
-    // ----------------------------------------------------
-    // 7. ORDER HISTORY & AUDIT LOG TABLE
-    // ----------------------------------------------------
-    function getStoredOrders() {
-      try {
-        const raw = localStorage.getItem(ORDERS_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
-      }
+    function reprintOrder(id) {
+      const o = getStoredOrders().find(x => x.id === id);
+      if (o) triggerThermalPrint(o);
     }
+
+    // ---------------- ORDERS ----------------
+    function getStoredOrders() {
+      try { return JSON.parse(localStorage.getItem(ORDERS_STORAGE_KEY) || '[]'); } catch (e) { return []; }
+    }
+    function saveOrders(orders) { localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders)); }
 
     function renderOrdersLogTable() {
       const orders = getStoredOrders();
       const query = (document.getElementById('orderLogSearch')?.value || '').toLowerCase().trim();
+      const sf = document.getElementById('orderStatusFilter')?.value || 'ALL';
       const tbody = document.getElementById('ordersLogTableBody');
-      const countEl = document.getElementById('ordersLogCount');
 
       const filtered = orders.filter(o => {
+        const st = o.status || 'Delivered';
+        if (sf !== 'ALL' && st !== sf) return false;
         if (!query) return true;
-        return o.id.toLowerCase().includes(query) ||
-               o.customer.name.toLowerCase().includes(query) ||
-               o.customer.phone.includes(query);
+        return o.id.toLowerCase().includes(query) || o.customer.name.toLowerCase().includes(query) || o.customer.phone.includes(query);
       });
+      document.getElementById('ordersLogCount').innerText = `Showing ${filtered.length} of ${orders.length} orders`;
 
-      countEl.innerText = `Showing ${filtered.length} of ${orders.length} orders`;
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 text-xs">No orders found matching search criteria.</td></tr>`;
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 text-xs">No orders found.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = filtered.map(order => {
-        const itemsSummary = order.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ');
+      const payColors = { Cash: 'bg-emerald-950 text-emerald-400 border-emerald-800', COD: 'bg-sky-950 text-sky-400 border-sky-800',
+                          bKash: 'bg-pink-950 text-pink-400 border-pink-800', Nagad: 'bg-orange-950 text-orange-400 border-orange-800',
+                          Card: 'bg-blue-950 text-blue-400 border-blue-800' };
+      const stColors = { Pending: 'text-amber-300', Delivered: 'text-emerald-400', Cancelled: 'text-rose-400' };
 
-        let payBadge = 'bg-slate-800 text-slate-300 border-slate-700';
-        if (order.paymentMethod === 'Cash') payBadge = 'bg-emerald-950 text-emerald-400 border-emerald-800';
-        if (order.paymentMethod === 'bKash') payBadge = 'bg-pink-950 text-pink-400 border-pink-800';
-        if (order.paymentMethod === 'Nagad') payBadge = 'bg-orange-950 text-orange-400 border-orange-800';
-        if (order.paymentMethod === 'Card') payBadge = 'bg-blue-950 text-blue-400 border-blue-800';
-
+      tbody.innerHTML = filtered.map(o => {
+        const st = o.status || 'Delivered';
+        const itemsSummary = o.items.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ');
         return `
-          <tr class="hover:bg-brand-dark/40 transition">
+          <tr class="hover:bg-brand-dark/40 transition ${st === 'Cancelled' ? 'opacity-50' : ''}">
             <td class="p-3 whitespace-nowrap">
-              <span class="font-mono font-bold text-brand-gold">${order.id}</span>
-              <div class="text-[10px] text-slate-500">${order.date}, ${order.time}</div>
+              <span class="font-mono font-bold text-brand-gold">${esc(o.id)}</span>
+              <div class="text-[10px] text-slate-500">${esc(o.date)}, ${esc(o.time)}</div>
+              <div class="text-[10px] text-slate-500">${esc(o.source || '')}</div>
             </td>
             <td class="p-3">
-              <div class="font-bold text-white">${order.customer.name}</div>
-              <div class="text-[10px] text-slate-400 font-mono">${order.customer.phone}</div>
+              <div class="font-bold text-white">${esc(o.customer.name)}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${esc(o.customer.phone)}</div>
+              <div class="text-[10px] text-slate-500 max-w-[160px] truncate">${esc(o.customer.address)}</div>
             </td>
             <td class="p-3 max-w-[220px]">
-              <div class="truncate text-slate-300 text-[11px]" title="${itemsSummary}">${itemsSummary}</div>
+              <div class="truncate text-slate-300 text-[11px]" title="${esc(itemsSummary)}">${esc(itemsSummary)}</div>
+              ${o.note ? `<div class="text-[10px] text-amber-300/80 truncate">📝 ${esc(o.note)}</div>` : ''}
             </td>
-            <td class="p-3 whitespace-nowrap">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${payBadge}">
-                ${order.paymentMethod}
-              </span>
+            <td class="p-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${payColors[o.paymentMethod] || 'bg-slate-800 text-slate-300 border-slate-700'}">${esc(o.paymentMethod)}</span></td>
+            <td class="p-3">
+              <select onchange="setOrderStatus('${o.id}', this.value)" class="bg-brand-dark border border-brand-border rounded-lg px-1.5 py-1 text-[11px] font-bold ${stColors[st]} focus:outline-none">
+                ${['Pending', 'Delivered', 'Cancelled'].map(s => `<option value="${s}" ${s === st ? 'selected' : ''}>${s}</option>`).join('')}
+              </select>
             </td>
-            <td class="p-3 text-right whitespace-nowrap font-bold text-white font-mono">
-              ৳${formatBDT(order.grandTotal)}
-            </td>
+            <td class="p-3 text-right whitespace-nowrap font-bold text-white font-mono">৳${formatBDT(o.grandTotal)}</td>
             <td class="p-3 text-center whitespace-nowrap">
               <div class="flex items-center justify-center gap-1.5">
-                <button onclick='triggerThermalPrint(${JSON.stringify(order)})' title="Re-Print Thermal Slip" class="p-1.5 bg-brand-dark hover:bg-brand-card border border-brand-border text-amber-400 rounded-lg transition">
-                  <i class="fa-solid fa-print"></i>
-                </button>
-                <button onclick="cancelAndRefundOrder('${order.id}')" title="Cancel & Delete Order" class="p-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-400 rounded-lg transition">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
+                <button onclick="copyOrderSummary('${o.id}')" title="Copy order summary (for Messenger/WhatsApp)" class="p-1.5 bg-brand-dark hover:bg-brand-card border border-brand-border text-sky-400 rounded-lg transition"><i class="fa-regular fa-copy"></i></button>
+                <button onclick="reprintOrder('${o.id}')" title="Reprint slip" class="p-1.5 bg-brand-dark hover:bg-brand-card border border-brand-border text-amber-400 rounded-lg transition"><i class="fa-solid fa-print"></i></button>
+                <button onclick="deleteOrder('${o.id}')" title="Delete order" class="p-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-400 rounded-lg transition"><i class="fa-solid fa-trash-can"></i></button>
               </div>
             </td>
-          </tr>
-        `;
+          </tr>`;
       }).join('');
     }
 
-    function cancelAndRefundOrder(orderId) {
-      if (!confirm(`Are you sure you want to Cancel and Delete Order ${orderId}? This will restore stock counts and recalculate sales.`)) {
-        return;
-      }
-
-      let orders = getStoredOrders();
-      const target = orders.find(o => o.id === orderId);
-
-      if (target) {
-        // Restore stock
-        restoreInventoryStock(target.items);
-      }
-
-      orders = orders.filter(o => o.id !== orderId);
-      localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
-
-      playBeep('error');
-      notify(`Order ${orderId} was cancelled & deleted.`, 'error');
-
-      renderOrdersLogTable();
-      updateTopMetrics();
-      renderInventoryTable();
+    function setOrderStatus(id, newStatus) {
+      const orders = getStoredOrders();
+      const o = orders.find(x => x.id === id);
+      if (!o) return;
+      const old = o.status || 'Delivered';
+      if (old === newStatus) return;
+      if (newStatus === 'Cancelled') restoreInventoryStock(o.items);
+      else if (old === 'Cancelled') deductInventoryStock(o.items);
+      o.status = newStatus;
+      saveOrders(orders);
+      playBeep(newStatus === 'Cancelled' ? 'error' : 'success');
+      notify(`${id} → ${newStatus}`);
+      renderOrdersLogTable(); updateTopMetrics(); calculateRegisterAudit();
     }
 
-    // ----------------------------------------------------
-    // 8. INVENTORY MANAGEMENT TABLE & MODAL
-    // ----------------------------------------------------
-    function renderInventoryTable() {
-      const inventory = getStoredInventory();
-      const tbody = document.getElementById('inventoryTableBody');
+    function copyOrderSummary(id) {
+      const o = getStoredOrders().find(x => x.id === id);
+      if (!o) return;
+      const lines = o.items.map(i => `• ${i.name} (${i.size}) x${i.qty} = ৳${formatBDT(i.total)}`).join('\n');
+      const text =
+`Elvaren Order ${o.id}
+নাম: ${o.customer.name}
+ফোন: ${o.customer.phone}
+ঠিকানা: ${o.customer.address}
 
-      tbody.innerHTML = inventory.map(item => `
+${lines}
+
+Subtotal: ৳${formatBDT(o.subtotal)}
+Discount: ৳${formatBDT(o.discount)}
+Delivery: ৳${formatBDT(o.delivery)}
+Total: ৳${formatBDT(o.grandTotal)} (${o.paymentMethod}${o.paymentMethod === 'COD' ? ' - ডেলিভারির সময় পরিশোধ' : ''})
+
+ধন্যবাদ Elvaren থেকে কেনাকাটার জন্য! 🌹`;
+      navigator.clipboard.writeText(text).then(
+        () => notify("Order summary copied!"),
+        () => notify("Copy failed. Allow clipboard access.", "error")
+      );
+    }
+
+    function deleteOrder(orderId) {
+      if (!confirm(`Delete order ${orderId} permanently? Stock will be restored.`)) return;
+      let orders = getStoredOrders();
+      const target = orders.find(o => o.id === orderId);
+      if (target && (target.status || 'Delivered') !== 'Cancelled') restoreInventoryStock(target.items);
+      saveOrders(orders.filter(o => o.id !== orderId));
+      playBeep('error');
+      notify(`Order ${orderId} deleted.`, 'error');
+      renderOrdersLogTable(); updateTopMetrics(); renderInventoryTable();
+    }
+
+    // ---------------- INVENTORY TABLE ----------------
+    function renderInventoryTable() {
+      const tbody = document.getElementById('inventoryTableBody');
+      tbody.innerHTML = getStoredInventory().map(item => `
         <tr class="hover:bg-brand-dark/40 transition">
-          <td class="p-3 font-bold text-white flex items-center gap-2">
-            <span>${item.icon || '✨'}</span>
-            <span>${item.name}</span>
-          </td>
-          <td class="p-3 text-slate-400">${item.category}</td>
-          <td class="p-3 text-slate-300 text-[11px]">3ml, 6ml, 12ml, 30ml, 50ml</td>
+          <td class="p-3 font-bold text-white"><span class="mr-2">${item.icon || '✨'}</span>${esc(item.name)}</td>
+          <td class="p-3 text-slate-400">${esc(item.category)}</td>
+          <td class="p-3 text-slate-300 text-[11px]">3ml, 6ml</td>
           <td class="p-3 text-right font-mono font-bold text-brand-gold">৳${formatBDT(item.price)}</td>
-          <td class="p-3 text-center font-bold font-mono text-sm ${item.stock <= 5 ? 'text-rose-400' : 'text-slate-200'}">
-            ${item.stock}
-          </td>
-          <td class="p-3 text-center">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.stock <= 5 ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
-              ${item.stock <= 5 ? 'Low Stock' : 'In Stock'}
-            </span>
-          </td>
+          <td class="p-3 text-center font-bold font-mono text-sm ${item.stock <= 5 ? 'text-rose-400' : 'text-slate-200'}">${item.stock}</td>
+          <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.stock <= 5 ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">${item.stock <= 0 ? 'Out of Stock' : item.stock <= 5 ? 'Low Stock' : 'In Stock'}</span></td>
           <td class="p-3 text-center">
             <div class="flex items-center justify-center gap-1">
               <button onclick="adjustStockUnit('${item.id}', -5)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-slate-300 hover:text-white">-5</button>
               <button onclick="adjustStockUnit('${item.id}', -1)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-slate-300 hover:text-white">-1</button>
-              <button onclick="adjustStockUnit('${item.id}', 1)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-brand-gold font-bold hover:text-yellow-300">+1</button>
-              <button onclick="adjustStockUnit('${item.id}', 10)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-brand-gold font-bold hover:text-yellow-300">+10</button>
+              <button onclick="adjustStockUnit('${item.id}', 1)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-brand-gold font-bold">+1</button>
+              <button onclick="adjustStockUnit('${item.id}', 10)" class="px-2 py-0.5 rounded bg-brand-dark border border-brand-border text-brand-gold font-bold">+10</button>
             </div>
           </td>
-        </tr>
-      `).join('');
+        </tr>`).join('');
     }
 
     function adjustStockUnit(id, delta) {
-      const inventory = getStoredInventory();
-      const item = inventory.find(i => i.id === id);
-      if (item) {
-        item.stock = Math.max(0, item.stock + delta);
-        saveInventory(inventory);
-        playBeep('add');
-      }
+      const inv = getStoredInventory();
+      const item = inv.find(i => i.id === id);
+      if (item) { item.stock = Math.max(0, item.stock + delta); saveInventory(inv); playBeep('add'); }
     }
-
-    function deductInventoryStock(cartItems) {
-      const inventory = getStoredInventory();
-      cartItems.forEach(cartItem => {
-        const match = inventory.find(i => i.name === cartItem.name || i.id === cartItem.skuId);
-        if (match) {
-          match.stock = Math.max(0, match.stock - cartItem.qty);
-        }
+    function deductInventoryStock(items) {
+      const inv = getStoredInventory();
+      items.forEach(ci => {
+        const m = inv.find(i => i.id === ci.skuId) || inv.find(i => i.name === ci.name);
+        if (m) m.stock = Math.max(0, m.stock - ci.qty);
       });
-      saveInventory(inventory);
+      saveInventory(inv);
     }
-
-    function restoreInventoryStock(cartItems) {
-      const inventory = getStoredInventory();
-      cartItems.forEach(cartItem => {
-        const match = inventory.find(i => i.name === cartItem.name || i.id === cartItem.skuId);
-        if (match) {
-          match.stock += cartItem.qty;
-        }
+    function restoreInventoryStock(items) {
+      const inv = getStoredInventory();
+      items.forEach(ci => {
+        const m = inv.find(i => i.id === ci.skuId) || inv.find(i => i.name === ci.name);
+        if (m) m.stock += ci.qty;
       });
-      saveInventory(inventory);
+      saveInventory(inv);
     }
 
-    function openNewInventoryItemModal() {
-      document.getElementById('inventoryModal').classList.remove('hidden');
-    }
-
-    function closeNewInventoryItemModal() {
-      document.getElementById('inventoryModal').classList.add('hidden');
-    }
-
+    function openNewInventoryItemModal() { document.getElementById('inventoryModal').classList.remove('hidden'); }
+    function closeNewInventoryItemModal() { document.getElementById('inventoryModal').classList.add('hidden'); }
     function handleNewInventoryItemSubmit(e) {
       e.preventDefault();
       const name = document.getElementById('newSkuName').value.trim();
-      const category = document.getElementById('newSkuCategory').value;
-      const price = parseFloat(document.getElementById('newSkuPrice').value) || 190;
-      const stock = parseInt(document.getElementById('newSkuStock').value) || 20;
-
-      const inventory = getStoredInventory();
-      const newItem = {
-        id: `FR-${Math.floor(100 + Math.random() * 900)}`,
-        name: name,
-        category: category,
-        price: price,
-        stock: stock,
-        icon: '💎'
-      };
-
-      inventory.push(newItem);
-      saveInventory(inventory);
+      const stock = parseInt(document.getElementById('newSkuStock').value) || 0;
+      const inv = getStoredInventory();
+      let n = inv.length + 1, id;
+      do { id = `FR-${String(n++).padStart(2, '0')}`; } while (inv.some(i => i.id === id) || REMOVED_IDS.includes(id));
+      inv.push({ id, name, category: 'ATTAR', price: 190, stock, icon: '💎' });
+      saveInventory(inv);
+      document.getElementById('newSkuName').value = '';
       closeNewInventoryItemModal();
       playBeep('success');
-      notify(`Added ${name} to stock registry!`);
+      notify(`Added ${name}!`);
     }
 
-    // ----------------------------------------------------
-    // 9. CRM & CUSTOMER DIRECTORY
-    // ----------------------------------------------------
+    // ---------------- CRM ----------------
     function getStoredCustomers() {
-      try {
-        const raw = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
-      }
+      try { return JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY) || '[]'); } catch (e) { return []; }
     }
-
     function upsertCustomerProfile(customer, orderTotal) {
-      const customers = getStoredCustomers();
-      const existing = customers.find(c => c.phone === customer.phone);
-
-      if (existing) {
-        existing.totalOrders += 1;
-        existing.lifetimeSpent += orderTotal;
-        existing.lastVisit = new Date().toLocaleDateString('en-GB');
-        if (customer.name) existing.name = customer.name;
-        if (customer.address) existing.address = customer.address;
+      const list = getStoredCustomers();
+      const norm = normalizePhone(customer.phone);
+      const ex = list.find(c => normalizePhone(c.phone) === norm);
+      if (ex) {
+        ex.totalOrders += 1; ex.lifetimeSpent += orderTotal; ex.lastVisit = todayStr();
+        ex.name = customer.name || ex.name;
+        if (customer.address && customer.address !== 'Counter Sale') ex.address = customer.address;
       } else {
-        customers.push({
-          name: customer.name,
-          phone: customer.phone,
-          address: customer.address || 'Outlet Client',
-          totalOrders: 1,
-          lifetimeSpent: orderTotal,
-          lastVisit: new Date().toLocaleDateString('en-GB')
-        });
+        list.push({ name: customer.name, phone: norm, address: customer.address, totalOrders: 1, lifetimeSpent: orderTotal, lastVisit: todayStr() });
       }
-
-      localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers));
-      renderCRMTable();
+      localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(list));
     }
 
     function renderCRMTable() {
-      const customers = getStoredCustomers();
       const query = (document.getElementById('crmSearchQuery')?.value || '').toLowerCase().trim();
       const tbody = document.getElementById('crmTableBody');
-
-      const filtered = customers.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 text-xs">No client accounts recorded yet.</td></tr>`;
-        return;
-      }
+      const filtered = getStoredCustomers().filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query));
+      if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 text-xs">No customers yet.</td></tr>`; return; }
 
       tbody.innerHTML = filtered.map(c => {
-        let tier = 'Standard';
-        let tierClass = 'bg-slate-800 text-slate-300';
-        if (c.lifetimeSpent > 2000) {
-          tier = 'Gold Member';
-          tierClass = 'bg-amber-950 text-amber-300 border border-amber-800';
-        }
-        if (c.lifetimeSpent > 5000) {
-          tier = 'Royal VIP';
-          tierClass = 'bg-purple-950 text-purple-300 border border-purple-800';
-        }
-
-        const rawPhone = c.phone.replace(/[^0-9]/g, '');
-        const waNumber = rawPhone.startsWith('88') ? rawPhone : (rawPhone.startsWith('01') ? `88${rawPhone}` : rawPhone);
-        const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hello ${c.name}, greetings from Elvaren Fragrances!`)}`;
-
+        let tier = 'Standard', cls = 'bg-slate-800 text-slate-300';
+        if (c.lifetimeSpent > 2000) { tier = 'Gold'; cls = 'bg-amber-950 text-amber-300 border border-amber-800'; }
+        if (c.lifetimeSpent > 5000) { tier = 'Royal VIP'; cls = 'bg-purple-950 text-purple-300 border border-purple-800'; }
+        const wa = `https://wa.me/88${normalizePhone(c.phone)}?text=${encodeURIComponent(`Hello ${c.name}, greetings from Elvaren Fragrances!`)}`;
         return `
           <tr class="hover:bg-brand-dark/40 transition">
-            <td class="p-3 font-bold text-white">${c.name}</td>
-            <td class="p-3 font-mono text-slate-300">${c.phone}</td>
-            <td class="p-3 text-slate-400">${c.address || 'Counter Sale'}</td>
+            <td class="p-3 font-bold text-white">${esc(c.name)}</td>
+            <td class="p-3 font-mono text-slate-300">${esc(c.phone)}</td>
+            <td class="p-3 text-slate-400">${esc(c.address || 'Counter Sale')}</td>
             <td class="p-3 text-center font-bold text-slate-200">${c.totalOrders}</td>
             <td class="p-3 text-right font-mono font-bold text-brand-gold">৳${formatBDT(c.lifetimeSpent)}</td>
-            <td class="p-3 text-center">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${tierClass}">${tier}</span>
-            </td>
-            <td class="p-3 text-center">
-              <a href="${waLink}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-700/60 text-emerald-400 rounded-lg text-xs font-bold transition">
-                <i class="fa-brands fa-whatsapp"></i> Chat
-              </a>
-            </td>
-          </tr>
-        `;
+            <td class="p-3 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${cls}">${tier}</span></td>
+            <td class="p-3 text-center"><a href="${wa}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-700/60 text-emerald-400 rounded-lg text-xs font-bold transition"><i class="fa-brands fa-whatsapp"></i> Chat</a></td>
+          </tr>`;
       }).join('');
     }
 
-    // ----------------------------------------------------
-    // 10. DAY-END CASH AUDIT & PETTY CASH EXPENSE
-    // ----------------------------------------------------
+    // ---------------- EXPENSES / DAY-END ----------------
     function getStoredExpenses() {
-      try {
-        const raw = localStorage.getItem(EXPENSES_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
-      }
+      try { return JSON.parse(localStorage.getItem(EXPENSES_STORAGE_KEY) || '[]'); } catch (e) { return []; }
     }
-
     function handleExpenseSubmit(e) {
       e.preventDefault();
       const reason = document.getElementById('expenseReason').value.trim();
       const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
       const method = document.getElementById('expensePaymentMethod').value;
-
-      if (!reason || amount <= 0) return notify("Enter valid expense details.", "error");
-
-      const expenses = getStoredExpenses();
-      expenses.unshift({
-        id: `EXP-${Date.now().toString().slice(-4)}`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date: new Date().toLocaleDateString('en-GB'),
-        reason: reason,
-        amount: amount,
-        method: method
-      });
-
-      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expenses));
+      if (!reason || amount <= 0) return notify("Enter valid expense.", "error");
+      const ex = getStoredExpenses();
+      ex.unshift({ id: `EXP-${Date.now()}`, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), date: todayStr(), reason, amount, method });
+      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(ex));
       document.getElementById('expenseReason').value = '';
       document.getElementById('expenseAmount').value = '';
-
-      playBeep('add');
-      notify(`Logged expense: ৳${amount}`);
-      renderExpensesTable();
+      playBeep('add'); notify(`Expense logged: ৳${amount}`);
       calculateRegisterAudit();
     }
-
     function renderExpensesTable() {
-      const expenses = getStoredExpenses();
-      const today = new Date().toLocaleDateString('en-GB');
-      const todayExpenses = expenses.filter(e => e.date === today);
+      const today = getStoredExpenses().filter(e => e.date === todayStr());
       const tbody = document.getElementById('expensesTableBody');
-
-      if (todayExpenses.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 text-xs">No petty expenses recorded today.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = todayExpenses.map((exp, idx) => `
+      if (!today.length) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 text-xs">No expenses today.</td></tr>`; return; }
+      tbody.innerHTML = today.map(e => `
         <tr>
-          <td class="p-2.5 text-slate-400 font-mono text-[10px]">${exp.time}</td>
-          <td class="p-2.5 font-bold text-white">${exp.reason} <span class="text-[10px] text-slate-500 font-normal">(${exp.method})</span></td>
-          <td class="p-2.5 text-right font-mono font-bold text-rose-400">৳${formatBDT(exp.amount)}</td>
-          <td class="p-2.5 text-center">
-            <button onclick="deleteExpenseEntry(${idx})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-xmark text-xs"></i></button>
-          </td>
-        </tr>
-      `).join('');
+          <td class="p-2.5 text-slate-400 font-mono text-[10px]">${esc(e.time)}</td>
+          <td class="p-2.5 font-bold text-white">${esc(e.reason)} <span class="text-[10px] text-slate-500 font-normal">(${esc(e.method)})</span></td>
+          <td class="p-2.5 text-right font-mono font-bold text-rose-400">৳${formatBDT(e.amount)}</td>
+          <td class="p-2.5 text-center"><button onclick="deleteExpenseEntry('${e.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-xmark text-xs"></i></button></td>
+        </tr>`).join('');
+    }
+    function deleteExpenseEntry(id) {
+      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(getStoredExpenses().filter(e => e.id !== id)));
+      calculateRegisterAudit();
     }
 
-    function deleteExpenseEntry(idx) {
-      const expenses = getStoredExpenses();
-      expenses.splice(idx, 1);
-      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expenses));
-      renderExpensesTable();
-      calculateRegisterAudit();
+    // Orders that actually brought cash into the drawer today
+    function isCashOrder(o) {
+      const st = o.status || 'Delivered';
+      if (st === 'Cancelled') return false;
+      if (o.paymentMethod === 'Cash') return true;
+      if (o.paymentMethod === 'COD' && st === 'Delivered') return true;
+      return false;
     }
 
     function calculateRegisterAudit() {
       renderExpensesTable();
+      const today = todayStr();
+      const todayOrders = getStoredOrders().filter(o => o.date === today);
+      const cashSales = todayOrders.filter(isCashOrder).reduce((s, o) => s + o.grandTotal, 0);
+      const cashExpenses = getStoredExpenses().filter(e => e.date === today && e.method === 'Cash Drawer').reduce((s, e) => s + e.amount, 0);
+      const opening = parseFloat(document.getElementById('openingCashAmount').value) || 0;
+      const physical = parseFloat(document.getElementById('physicalCashCount').value) || 0;
+      const expected = opening + cashSales - cashExpenses;
+      const variance = physical - expected;
 
-      const orders = getStoredOrders();
-      const today = new Date().toLocaleDateString('en-GB');
-      const todayOrders = orders.filter(o => o.date === today);
-
-      const cashSales = todayOrders
-        .filter(o => o.paymentMethod === 'Cash')
-        .reduce((sum, o) => sum + o.grandTotal, 0);
-
-      const expenses = getStoredExpenses();
-      const cashExpenses = expenses
-        .filter(e => e.date === today && e.method === 'Cash Drawer')
-        .reduce((sum, e) => sum + e.amount, 0);
-
-      const openingFloat = parseFloat(document.getElementById('openingCashAmount').value) || 0;
-      const physicalCount = parseFloat(document.getElementById('physicalCashCount').value) || 0;
-
-      const expectedCash = openingFloat + cashSales - cashExpenses;
-      const variance = physicalCount - expectedCash;
-
-      document.getElementById('auditOpeningFloat').innerText = `৳${formatBDT(openingFloat)}`;
+      document.getElementById('auditOpeningFloat').innerText = `৳${formatBDT(opening)}`;
       document.getElementById('auditCashSales').innerText = `৳${formatBDT(cashSales)}`;
       document.getElementById('auditCashExpenses').innerText = `৳${formatBDT(cashExpenses)}`;
-      document.getElementById('auditExpectedCash').innerText = `৳${formatBDT(expectedCash)}`;
+      document.getElementById('auditExpectedCash').innerText = `৳${formatBDT(expected)}`;
 
-      const varianceEl = document.getElementById('auditVariance');
-      if (physicalCount === 0) {
-        varianceEl.innerText = `Pending Night Count`;
-        varianceEl.className = "text-slate-400";
-      } else if (variance === 0) {
-        varianceEl.innerText = `৳0 (Perfect Match)`;
-        varianceEl.className = "text-emerald-400 font-bold";
-      } else if (variance > 0) {
-        varianceEl.innerText = `+ ৳${formatBDT(variance)} (Surplus/Excess)`;
-        varianceEl.className = "text-blue-400 font-bold";
-      } else {
-        varianceEl.innerText = `- ৳${formatBDT(Math.abs(variance))} (Shortage/Deficit)`;
-        varianceEl.className = "text-rose-400 font-bold";
-      }
+      const v = document.getElementById('auditVariance');
+      if (physical === 0) { v.innerText = 'Pending night count'; v.className = 'text-slate-400'; }
+      else if (variance === 0) { v.innerText = '৳0 (Perfect match)'; v.className = 'text-emerald-400 font-bold'; }
+      else if (variance > 0) { v.innerText = `+ ৳${formatBDT(variance)} (Surplus)`; v.className = 'text-blue-400 font-bold'; }
+      else { v.innerText = `- ৳${formatBDT(Math.abs(variance))} (Shortage)`; v.className = 'text-rose-400 font-bold'; }
+
+      // Best sellers today
+      const tally = {};
+      todayOrders.filter(o => (o.status || 'Delivered') !== 'Cancelled').forEach(o => o.items.forEach(i => { tally[i.name] = (tally[i.name] || 0) + i.qty; }));
+      const top = Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      document.getElementById('bestSellersList').innerHTML = top.length
+        ? top.map(([n, q], idx) => `<div class="flex justify-between"><span>${idx + 1}. ${esc(n)}</span><span class="font-mono font-bold text-brand-gold">${q} pcs</span></div>`).join('')
+        : '<div class="text-slate-500">No sales yet today.</div>';
     }
 
-    // ----------------------------------------------------
-    // 11. TOP METRICS KPI SYNCHRONIZATION
-    // ----------------------------------------------------
+    // ---------------- KPI ----------------
     function updateTopMetrics() {
       const orders = getStoredOrders();
-      const today = new Date().toLocaleDateString('en-GB');
-      const todayOrders = orders.filter(o => o.date === today);
+      const today = todayStr();
+      const live = orders.filter(o => o.date === today && (o.status || 'Delivered') !== 'Cancelled');
 
-      const grossRev = todayOrders.reduce((sum, o) => sum + o.grandTotal, 0);
-      const cashTotal = todayOrders.filter(o => o.paymentMethod === 'Cash').reduce((sum, o) => sum + o.grandTotal, 0);
-      const digitalTotal = todayOrders.filter(o => o.paymentMethod === 'bKash' || o.paymentMethod === 'Nagad').reduce((sum, o) => sum + o.grandTotal, 0);
-      const cardTotal = todayOrders.filter(o => o.paymentMethod === 'Card').reduce((sum, o) => sum + o.grandTotal, 0);
+      const sum = arr => arr.reduce((s, o) => s + o.grandTotal, 0);
+      document.getElementById('statTodayOrders').innerText = live.length;
+      document.getElementById('statTodayRevenue').innerText = `৳${formatBDT(sum(live))}`;
+      document.getElementById('statCashTotal').innerText = `৳${formatBDT(sum(live.filter(isCashOrder)))}`;
+      document.getElementById('statDigitalTotal').innerText = `৳${formatBDT(sum(live.filter(o => o.paymentMethod === 'bKash' || o.paymentMethod === 'Nagad')))}`;
+      document.getElementById('statCardTotal').innerText = `৳${formatBDT(sum(live.filter(o => o.paymentMethod === 'Card')))}`;
 
-      const inventory = getStoredInventory();
-      const lowStockCount = inventory.filter(i => i.stock <= 5).length;
+      const pending = orders.filter(o => o.status === 'Pending');
+      document.getElementById('statPendingCount').innerText = pending.length;
+      document.getElementById('statPendingDue').innerText = `COD due ৳${formatBDT(sum(pending.filter(o => o.paymentMethod === 'COD')))}`;
 
-      document.getElementById('statTodayOrders').innerText = todayOrders.length;
-      document.getElementById('statTodayRevenue').innerText = `৳${formatBDT(grossRev)}`;
-      document.getElementById('statCashTotal').innerText = `৳${formatBDT(cashTotal)}`;
-      document.getElementById('statDigitalTotal').innerText = `৳${formatBDT(digitalTotal)}`;
-      document.getElementById('statCardTotal').innerText = `৳${formatBDT(cardTotal)}`;
-
-      const lowStockEl = document.getElementById('statLowStockCount');
-      const lowStockIcon = document.getElementById('lowStockBadgeIcon');
-      lowStockEl.innerText = lowStockCount;
-
-      if (lowStockCount > 0) {
-        lowStockIcon.className = "p-1.5 rounded-lg bg-rose-500/20 text-rose-400 text-xs animate-bounce";
-        lowStockEl.className = "text-2xl font-black text-rose-400";
-      } else {
-        lowStockIcon.className = "p-1.5 rounded-lg bg-slate-800 text-slate-400 text-xs";
-        lowStockEl.className = "text-2xl font-black text-slate-200";
-      }
+      const low = getStoredInventory().filter(i => i.stock <= 5).length;
+      const lowEl = document.getElementById('statLowStockCount'), lowIcon = document.getElementById('lowStockBadgeIcon');
+      lowEl.innerText = low;
+      lowIcon.className = low > 0 ? "p-1.5 rounded-lg bg-rose-500/20 text-rose-400 text-xs animate-bounce" : "p-1.5 rounded-lg bg-slate-800 text-slate-400 text-xs";
+      lowEl.className = low > 0 ? "text-2xl font-black text-rose-400" : "text-2xl font-black text-slate-200";
     }
 
-    // Initialize Mock Initial Data
-    function seedAppDefaults() {
-      if (!localStorage.getItem(ORDERS_STORAGE_KEY)) {
-        const seed = [
-          {
-            id: 'ELV-1001',
-            timestamp: new Date().toISOString(),
-            date: new Date().toLocaleDateString('en-GB'),
-            time: '11:30 AM',
-            customer: { name: 'Saimon Chowdhury', phone: '01863680414', address: 'GEC Circle, Chattogram' },
-            items: [
-              { name: 'Vampire Blood', size: '6ml Roll-on', price: 190, qty: 1, total: 190 },
-              { name: 'নিশা (Nisha)', size: '6ml Roll-on', price: 190, qty: 1, total: 190 }
-            ],
-            subtotal: 380,
-            discount: 0,
-            delivery: 0,
-            grandTotal: 380,
-            paymentMethod: 'Cash'
-          }
-        ];
-        localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(seed));
-      }
-
-      if (!localStorage.getItem(CUSTOMERS_STORAGE_KEY)) {
-        const seedCustomers = [
-          {
-            name: 'Saimon Chowdhury',
-            phone: '01863680414',
-            address: 'GEC Circle, Chattogram',
-            totalOrders: 1,
-            lifetimeSpent: 380,
-            lastVisit: new Date().toLocaleDateString('en-GB')
-          }
-        ];
-        localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(seedCustomers));
-      }
-    }
-
-    // App Mount
-    window.onload = function() {
+    // ---------------- INIT ----------------
+    window.onload = function () {
       checkAuthentication();
-      seedAppDefaults();
-      renderCatalogGrid();
+      setDefaultActiveSize('6ml Roll-on', 190);
+      setDeliveryFee(0);
+      setCheckoutPayment('Cash');
+      renderCartDrawer();
+      recalculateTotals();
       renderOrdersLogTable();
       renderInventoryTable();
       renderCRMTable();
