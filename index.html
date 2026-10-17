@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elvaren — Fragrance POS & Live Excel Order Hub</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Cinzel & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              gold: '#F59E0B',
+              goldHover: '#D97706',
+              goldLight: '#FEF3C7',
+              dark: '#0B0F19',
+              slate: '#0F172A',
+              card: '#1E293B',
+              cardBorder: '#334155'
+            }
+          },
+          fontFamily: {
+            serif: ['Cinzel', 'serif'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #f59e0b;
+    }
+
+    /* 80mm POS Thermal Receipt Printing */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        margin: 0;
+        padding: 4mm;
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 11px;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-brand-dark text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-gold selection:text-brand-dark">
+
+  <!-- ================= AUTHENTICATION OVERLAY (LOGIN GATE) ================= -->
+  <div id="authScreen" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300">
+    <div class="w-full max-w-md bg-brand-slate border border-brand-cardBorder rounded-2xl shadow-2xl p-6 sm:p-8 relative overflow-hidden">
+      <!-- Glow ambient backdrop -->
+      <div class="absolute -top-16 -right-16 w-44 h-44 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-16 -left-16 w-44 h-44 bg-amber-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Brand Logo in Auth -->
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark font-serif font-black text-2xl shadow-lg shadow-amber-500/20 mb-3">
+          E
+        </div>
+        <h2 class="text-2xl font-serif font-bold text-white tracking-widest uppercase">Elvaren</h2>
+        <p class="text-xs text-brand-gold tracking-wide mt-0.5 uppercase">Authorized POS & Sales Terminal</p>
+      </div>
+
+      <!-- Error notification box -->
+      <div id="authErrorAlert" class="hidden mb-4 p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-300 text-xs flex items-center gap-2.5">
+        <i class="fa-solid fa-circle-exclamation text-red-400"></i>
+        <span id="authErrorMsg">Invalid Login ID or Password.</span>
+      </div>
+
+      <!-- Login Form -->
+      <form onsubmit="handleUserLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Staff Username / ID</label>
+          <div class="relative">
+            <i class="fa-solid fa-user-lock absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+            <input type="text" id="loginUsername" required autocomplete="username" placeholder="Enter authorized username" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Access Password</label>
+          <div class="relative">
+            <i class="fa-solid fa-key absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+            <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Enter password" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200">
+              <i id="togglePassIcon" class="fa-solid fa-eye-slash text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 px-4 mt-2 bg-gradient-to-r from-amber-600 via-brand-gold to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-brand-dark font-bold text-sm tracking-wide rounded-xl shadow-lg shadow-amber-600/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>Authenticate & Open Terminal</span>
+        </button>
+      </form>
+
+      <div class="mt-5 text-center text-[11px] text-slate-400">
+        <i class="fa-solid fa-shield-halved text-amber-500/80 mr-1"></i> Private System • Offline Encrypted Storage
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOP NAVIGATION / ACTION BAR ================= -->
+  <header class="bg-brand-slate/90 backdrop-blur-md border-b border-brand-cardBorder sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand Logo / Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-brand-gold to-yellow-200 flex items-center justify-center text-brand-dark shadow-lg shadow-amber-500/20 font-serif font-black text-lg">
+          E
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-wider font-serif text-white uppercase">Elvaren</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/70 text-emerald-400 border border-emerald-800">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+              POS Active
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">Order Hub & Real-time Excel Sync</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons (Desktop Excel Link, CSV fallback, Logout) -->
+      <div class="flex items-center gap-2 flex-wrap">
+        
+        <!-- DIRECT DESKTOP EXCEL LINK BUTTON -->
+        <button id="linkExcelBtn" onclick="connectDesktopExcelFile()" title="Link your local Excel/CSV file to auto-append rows directly" class="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-semibold px-3 py-1.5 rounded-lg transition duration-150 shadow-sm">
+          <span id="excelStatusIcon" class="text-sm">🔗</span>
+          <span id="excelStatusLabel">Link Desktop Excel/CSV File</span>
+        </button>
+
+        <!-- Manual Backup CSV Export -->
+        <button onclick="exportToCSV()" title="Download manual backup CSV" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium px-3 py-1.5 rounded-lg transition duration-150">
+          <i class="fa-solid fa-file-excel text-emerald-400"></i>
+          <span class="hidden sm:inline">Export Backup (.CSV)</span>
+        </button>
+
+        <!-- Logout Action -->
+        <button onclick="handleUserLogout()" title="Lock terminal and logout" class="flex items-center gap-1.5 bg-slate-900 hover:bg-red-950/60 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-800 text-xs font-medium px-2.5 py-1.5 rounded-lg transition duration-150">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span class="hidden md:inline">Lock / Log Out</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 flex-1 flex flex-col gap-5">
+
+    <!-- KPI / METRICS ROW -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <!-- Total Orders Today -->
+      <div class="bg-brand-card/90 border border-brand-cardBorder rounded-xl p-3.5 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today's Orders</p>
+          <h3 id="statTodayOrders" class="text-2xl font-bold text-white mt-0.5">0</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5">Logged sales</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-brand-gold text-base">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
+      </div>
+
+      <!-- Gross Revenue Today -->
+      <div class="bg-brand-card/90 border border-brand-cardBorder rounded-xl p-3.5 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today's Revenue</p>
+          <h3 id="statTodayRevenue" class="text-2xl font-bold text-brand-gold mt-0.5">৳ 0</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5">Net receipts</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-base">
+          <i class="fa-solid fa-bangladeshi-taka-sign"></i>
+        </div>
+      </div>
+
+      <!-- Cash in Drawer -->
+      <div class="bg-brand-card/90 border border-brand-cardBorder rounded-xl p-3.5 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cash in Register</p>
+          <h3 id="statCashTotal" class="text-2xl font-bold text-slate-200 mt-0.5">৳ 0</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5">Physical cash drawer</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-base">
+          <i class="fa-solid fa-money-bill-wave"></i>
+        </div>
+      </div>
+
+      <!-- Digital / Mobile Banking -->
+      <div class="bg-brand-card/90 border border-brand-cardBorder rounded-xl p-3.5 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">bKash / Nagad / Card</p>
+          <h3 id="statDigitalTotal" class="text-2xl font-bold text-pink-400 mt-0.5">৳ 0</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5">Direct merchant pay</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 text-base">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN TWO-PANEL INTERFACE -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      
+      <!-- ================= LEFT: CUSTOMER ORDER FORM (5 COLS) ================= -->
+      <div class="lg:col-span-5 bg-brand-card border border-brand-cardBorder rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/40">
+        
+        <div class="flex items-center justify-between pb-3 border-b border-brand-cardBorder mb-4">
+          <div class="flex items-center gap-2">
+            <span class="p-1.5 bg-brand-gold/20 text-brand-gold rounded-lg text-xs">
+              <i class="fa-solid fa-cart-plus"></i>
+            </span>
+            <h2 class="text-sm font-semibold text-white tracking-wide uppercase">New Fragrance Order</h2>
+          </div>
+          <span id="currentDateIndicator" class="text-[11px] text-slate-400 font-mono"></span>
+        </div>
+
+        <form id="orderForm" onsubmit="handleOrderSubmission(event)" class="space-y-3.5">
+          
+          <!-- 1. Customer Information Card -->
+          <div class="space-y-2.5 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+            <h3 class="text-[11px] font-bold text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-user-circle"></i> Customer Details
+            </h3>
+
+            <div>
+              <label class="block text-[11px] font-medium text-slate-300 mb-0.5">Customer Name <span class="text-amber-500">*</span></label>
+              <input type="text" id="custName" required placeholder="e.g. Tanvir Chowdhury" class="w-full bg-slate-800/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] font-medium text-slate-300 mb-0.5">Phone Number <span class="text-amber-500">*</span></label>
+                <input type="tel" id="custPhone" required placeholder="017XXXXXXXX" pattern="^(?:\+88|88)?(01[3-9]\d{8})$" title="Valid 11-digit Bangladeshi mobile number" class="w-full bg-slate-800/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-300 mb-0.5">Delivery / Area Address</label>
+                <input type="text" id="custAddress" placeholder="e.g. Dhanmondi, Dhaka" class="w-full bg-slate-800/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Fragrance Selection & Cart Builder -->
+          <div class="space-y-2.5 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+            <div class="flex items-center justify-between">
+              <h3 class="text-[11px] font-bold text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-spray-can-sparkles"></i> Select Perfume
+              </h3>
+              <span class="text-[10px] text-slate-400">Regular: ৳190</span>
+            </div>
+
+            <div class="space-y-2">
+              <div class="grid grid-cols-12 gap-2">
+                <!-- Fragrance Dropdown -->
+                <div class="col-span-7">
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Perfume Line</label>
+                  <select id="itemFragranceSelect" onchange="toggleCustomPerfumeField()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+                    <option value="Vampire Blood" data-price="190">Vampire Blood</option>
+                    <option value="Creed Aventus" data-price="190">Creed Aventus</option>
+                    <option value="ADG Profumo" data-price="190">ADG Profumo</option>
+                    <option value="Layton" data-price="190">Layton</option>
+                    <option value="Valentino" data-price="190">Valentino</option>
+                    <option value="__custom__">-- Custom Fragrance --</option>
+                  </select>
+                </div>
+
+                <!-- Bottle Size -->
+                <div class="col-span-5">
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Bottle Size</label>
+                  <select id="itemBottleSize" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+                    <option value="6ml Roll-on Attar">6ml Roll-on</option>
+                    <option value="3ml Sample Vial">3ml Sample</option>
+                    <option value="12ml Crystal Attar">12ml Crystal</option>
+                    <option value="30ml Pocket EDP">30ml Pocket</option>
+                    <option value="50ml Luxury EDP">50ml Luxury</option>
+                    <option value="Gift Box Package">Gift Box</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Custom Name Field (if __custom__ selected) -->
+              <div id="customNameWrapper" class="hidden">
+                <label class="block text-[10px] text-slate-400 mb-0.5">Enter Custom Fragrance Title</label>
+                <input type="text" id="itemCustomName" placeholder="e.g. Tom Ford Tobacco Vanille" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+              </div>
+
+              <!-- Price, Qty and Add to Cart -->
+              <div class="grid grid-cols-12 gap-2 items-end">
+                <div class="col-span-4">
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Unit (৳)</label>
+                  <input type="number" id="itemPrice" min="0" value="190" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+                </div>
+                <div class="col-span-3">
+                  <label class="block text-[10px] text-slate-400 mb-0.5">Quantity</label>
+                  <input type="number" id="itemQty" min="1" value="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white text-center focus:outline-none focus:border-brand-gold">
+                </div>
+                <div class="col-span-5">
+                  <button type="button" onclick="addFragranceItemToCart()" class="w-full bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/40 font-medium py-1.5 px-2 rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>Add Item</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cart Table Items -->
+            <div class="mt-2 border-t border-slate-800 pt-2">
+              <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                <span>Items in Order</span>
+                <span id="cartUnitsLabel" class="text-brand-gold font-medium">0 items</span>
+              </div>
+              <div id="cartItemsContainer" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                <div class="text-center py-3 text-xs text-slate-500 border border-dashed border-slate-800 rounded-lg">
+                  No items added yet. Click "+ Add Item" above.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Payment Method & Billing -->
+          <div class="space-y-2.5 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+            <h3 class="text-[11px] font-bold text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-credit-card"></i> Payment & Totals
+            </h3>
+
+            <!-- Payment Radio Buttons -->
+            <div class="grid grid-cols-4 gap-1.5">
+              <label class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800/80 cursor-pointer hover:border-brand-gold transition duration-150 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/15">
+                <input type="radio" name="orderPayment" value="Cash" checked class="hidden">
+                <i class="fa-solid fa-money-bill-1 text-emerald-400 text-sm mb-1"></i>
+                <span class="text-[11px] font-medium text-slate-200">Cash</span>
+              </label>
+
+              <label class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800/80 cursor-pointer hover:border-brand-gold transition duration-150 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/15">
+                <input type="radio" name="orderPayment" value="bKash" class="hidden">
+                <i class="fa-solid fa-paper-plane text-pink-400 text-sm mb-1"></i>
+                <span class="text-[11px] font-medium text-slate-200">bKash</span>
+              </label>
+
+              <label class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800/80 cursor-pointer hover:border-brand-gold transition duration-150 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/15">
+                <input type="radio" name="orderPayment" value="Nagad" class="hidden">
+                <i class="fa-solid fa-bolt text-orange-400 text-sm mb-1"></i>
+                <span class="text-[11px] font-medium text-slate-200">Nagad</span>
+              </label>
+
+              <label class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-700 bg-slate-800/80 cursor-pointer hover:border-brand-gold transition duration-150 has-[:checked]:border-brand-gold has-[:checked]:bg-brand-gold/15">
+                <input type="radio" name="orderPayment" value="Card" class="hidden">
+                <i class="fa-regular fa-credit-card text-blue-400 text-sm mb-1"></i>
+                <span class="text-[11px] font-medium text-slate-200">Card</span>
+              </label>
+            </div>
+
+            <!-- Discount & Grand Total -->
+            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800 items-center">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">Discount (৳)</label>
+                <div class="relative">
+                  <span class="absolute left-2.5 top-1.5 text-slate-400 text-xs">৳</span>
+                  <input type="number" id="orderDiscount" min="0" value="0" oninput="calculateBillingTotals()" class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-400 block">Subtotal: <span id="labelSubtotal" class="font-medium text-slate-200">৳ 0</span></span>
+                <div class="text-xs font-bold text-white mt-0.5">
+                  Grand Total: <span id="labelGrandTotal" class="text-brand-gold text-base font-bold">৳ 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBMIT & AUTO-SYNC BUTTON -->
+          <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-amber-600 via-brand-gold to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-brand-dark font-bold text-xs tracking-wider uppercase rounded-xl shadow-lg shadow-amber-600/25 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+            <span>Save & Log Order (Auto-Append Excel)</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- ================= RIGHT: LIVE SALES LOGS & SEARCH (7 COLS) ================= -->
+      <div class="lg:col-span-7 bg-brand-card border border-brand-cardBorder rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/40 flex flex-col min-h-[620px]">
+        
+        <!-- Table Search & Header -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 border-b border-brand-cardBorder">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="p-1.5 bg-slate-800 text-brand-gold rounded-lg text-xs">
+                <i class="fa-solid fa-list-check"></i>
+              </span>
+              <h2 class="text-sm font-semibold text-white tracking-wide uppercase">Live Orders & Sales Feed</h2>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Instant local archive & desktop excel stream</p>
+          </div>
+
+          <!-- Dynamic Search Bar -->
+          <div class="relative w-full sm:w-60">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input type="text" id="tableSearchQuery" oninput="renderOrdersTable()" placeholder="Search name, phone, ID..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold">
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="flex-1 overflow-x-auto mt-3 -mx-1">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-900/40 text-[10px]">
+                <th class="py-2.5 px-3">Order / Time</th>
+                <th class="py-2.5 px-3">Customer</th>
+                <th class="py-2.5 px-3">Fragrances</th>
+                <th class="py-2.5 px-3">Pay</th>
+                <th class="py-2.5 px-3 text-right">Total (৳)</th>
+                <th class="py-2.5 px-3 text-center">Receipt</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody" class="divide-y divide-slate-800/60 font-normal text-slate-200">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Footer -->
+        <div class="pt-3 mt-auto border-t border-brand-cardBorder flex items-center justify-between text-[11px] text-slate-400">
+          <span id="recordCountLabel">Showing 0 orders</span>
+          <span class="text-slate-500 flex items-center gap-1">
+            <i class="fa-solid fa-shield-halved text-brand-gold/70"></i> 100% Client-Side Privacy
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ================= INLINE 80mm THERMAL RECEIPT AREA (PRINT ONLY) ================= -->
+  <div id="printArea" class="hidden">
+    <!-- Populated on receipt print -->
+  </div>
+
+  <!-- ================= MODAL: 80mm RECEIPT PREVIEW ================= -->
+  <div id="receiptModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-brand-slate border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl p-5 flex flex-col text-slate-100 relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="font-serif font-bold text-sm text-brand-gold flex items-center gap-2">
+          <i class="fa-solid fa-receipt"></i> 80mm POS Thermal Slip
+        </h3>
+        <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <!-- White thermal paper simulation -->
+      <div id="receiptPreviewBox" class="bg-white text-black p-4 rounded-lg my-3 font-mono text-[11px] leading-relaxed shadow-inner max-h-[440px] overflow-y-auto">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="printThermalReceipt()" class="flex-1 bg-brand-gold hover:bg-brand-goldHover text-brand-dark font-bold py-2.5 rounded-lg text-xs transition duration-150 flex items-center justify-center gap-1.5 shadow-md">
+          <i class="fa-solid fa-print"></i>
+          <span>Print Thermal Slip</span>
+        </button>
+        <button onclick="closeReceiptModal()" class="px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2.5 rounded-lg text-xs transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST NOTIFICATION ================= -->
+  <div id="appToast" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-brand-gold/60 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toastIcon" class="text-brand-gold text-lg">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <div id="toastText" class="text-xs font-medium">Operation completed.</div>
+  </div>
+
+  <!-- ================= CORE CLIENT-SIDE JAVASCRIPT ================= -->
+  <script>
+    // System Constants
+    const STORAGE_KEY = 'ELVAREN_POS_ORDERS_LOCAL_V2';
+    const AUTH_SESSION_KEY = 'ELVAREN_AUTHENTICATED_SESSION';
+    const AUTH_USER = 'mahinihfajsaimon';
+    const AUTH_PASS = 'mahinihfajsaimon';
+
+    // Application State
+    let cart = [];
+    let currentReceiptOrder = null;
+    let desktopFileHandle = null; // Direct File System Access handle
+
+    // Format BDT
+    function formatBDT(num) {
+      return new Intl.NumberFormat('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num || 0);
+    }
+
+    // Toast Notification Utility
+    function notify(message, isError = false) {
+      const toast = document.getElementById('appToast');
+      const toastText = document.getElementById('toastText');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastText.textContent = message;
+      if (isError) {
+        toast.className = toast.className.replace('border-brand-gold/60', 'border-red-500');
+        toastIcon.className = "text-red-400 text-lg";
+        toastIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+      } else {
+        toast.className = toast.className.replace('border-red-500', 'border-brand-gold/60');
+        toastIcon.className = "text-brand-gold text-lg";
+        toastIcon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    // ================= 1. AUTHENTICATION MODULE =================
+    function checkAuthentication() {
+      const isAuthenticated = sessionStorage.getItem(AUTH_SESSION_KEY);
+      const authScreen = document.getElementById('authScreen');
+      if (isAuthenticated === 'true') {
+        authScreen.classList.add('hidden');
+      } else {
+        authScreen.classList.remove('hidden');
+      }
+    }
+
+    function handleUserLogin(event) {
+      event.preventDefault();
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value.trim();
+      const alertBox = document.getElementById('authErrorAlert');
+      const alertMsg = document.getElementById('authErrorMsg');
+
+      if (u === AUTH_USER && p === AUTH_PASS) {
+        sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
+        alertBox.classList.add('hidden');
+        document.getElementById('authScreen').classList.add('hidden');
+        notify("Welcome, Saimon! POS Terminal Unlocked.");
+      } else {
+        alertMsg.textContent = "Unauthorized: Invalid username or password!";
+        alertBox.classList.remove('hidden');
+      }
+    }
+
+    function handleUserLogout() {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('authErrorAlert').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      notify("Terminal locked successfully.");
+    }
+
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('loginPassword');
+      const icon = document.getElementById('togglePassIcon');
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      } else {
+        passInput.type = 'password';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      }
+    }
+
+    // ================= 2. DESKTOP EXCEL FILE SYSTEM SYNC =================
+    async function connectDesktopExcelFile() {
+      if (!('showSaveFilePicker' in window)) {
+        notify("Your browser doesn't support direct local file access. Please use Chrome or Edge.", true);
+        return;
+      }
+
+      try {
+        desktopFileHandle = await window.showSaveFilePicker({
+          suggestedName: 'Elvaren_Fragrance_Sales_Book.csv',
+          types: [{
+            description: 'Microsoft Excel CSV File',
+            accept: { 'text/csv': ['.csv'], 'text/plain': ['.txt'] }
+          }]
+        });
+
+        const file = await desktopFileHandle.getFile();
+        const content = await file.text();
+
+        // Update UI status
+        const btn = document.getElementById('linkExcelBtn');
+        const label = document.getElementById('excelStatusLabel');
+        const icon = document.getElementById('excelStatusIcon');
+
+        label.textContent = `Synced: ${file.name}`;
+        icon.textContent = "🟢";
+        btn.className = "flex items-center gap-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition duration-150 shadow-sm";
+
+        // If newly created or empty file, inject UTF-8 BOM & Headers
+        if (!content.trim()) {
+          const header = "Order ID,Date,Time,Customer Name,Phone Number,Delivery Address,Fragrance Items,Subtotal (BDT),Discount (BDT),Grand Total (BDT),Payment Method\n";
+          const writable = await desktopFileHandle.createWritable();
+          await writable.write('\uFEFF' + header);
+          await writable.close();
+        }
+
+        notify(`Excel File Linked! Every order will now append automatically.`);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error("File selection error:", err);
+          notify("Failed to link desktop Excel file.", true);
+        }
+      }
+    }
+
+    // Append new order directly to linked desktop Excel/CSV file
+    async function appendOrderToDesktopExcel(order) {
+      if (!desktopFileHandle) {
+        console.warn("No desktop Excel file linked. Skipping direct file write.");
+        return;
+      }
+
+      try {
+        const file = await desktopFileHandle.getFile();
+        const existingContent = await file.text();
+
+        const itemsFormatted = order.items.map(i => `${i.name} [${i.size}] x${i.qty} (৳${i.total})`).join('; ');
+        
+        // Single CSV row
+        const row = [
+          `"${order.id}"`,
+          `"${order.date}"`,
+          `"${order.time}"`,
+          `"${order.customer.name.replace(/"/g, '""')}"`,
+          `"${order.customer.phone}"`,
+          `"${(order.customer.address || '').replace(/"/g, '""')}"`,
+          `"${itemsFormatted.replace(/"/g, '""')}"`,
+          order.subtotal,
+          order.discount,
+          order.grandTotal,
+          `"${order.paymentMethod}"`
+        ].join(',') + "\n";
+
+        const writable = await desktopFileHandle.createWritable();
+        // If file was previously empty, prepend BOM
+        if (!existingContent.trim()) {
+          const header = "Order ID,Date,Time,Customer Name,Phone Number,Delivery Address,Fragrance Items,Subtotal (BDT),Discount (BDT),Grand Total (BDT),Payment Method\n";
+          await writable.write('\uFEFF' + header + row);
+        } else {
+          await writable.write(existingContent + row);
+        }
+        await writable.close();
+
+        notify(`Order row appended directly to desktop Excel!`);
+      } catch (err) {
+        console.error("Direct Excel write failed:", err);
+        notify("Could not write to desktop file. Check file permissions.", true);
+      }
+    }
+
+    // ================= 3. CART & ORDER LOGIC =================
+    function toggleCustomPerfumeField() {
+      const select = document.getElementById('itemFragranceSelect');
+      const wrapper = document.getElementById('customNameWrapper');
+      const priceInput = document.getElementById('itemPrice');
+
+      if (select.value === '__custom__') {
+        wrapper.classList.remove('hidden');
+        document.getElementById('itemCustomName').focus();
+        priceInput.value = 190;
+      } else {
+        wrapper.classList.add('hidden');
+        const selectedOpt = select.options[select.selectedIndex];
+        priceInput.value = selectedOpt.getAttribute('data-price') || 190;
+      }
+    }
+
+    function addFragranceItemToCart() {
+      const select = document.getElementById('itemFragranceSelect');
+      const customNameInput = document.getElementById('itemCustomName');
+      const sizeInput = document.getElementById('itemBottleSize');
+      const priceInput = document.getElementById('itemPrice');
+      const qtyInput = document.getElementById('itemQty');
+
+      let name = select.value;
+      if (name === '__custom__') {
+        name = customNameInput.value.trim();
+        if (!name) {
+          notify("Please specify the custom fragrance name.", true);
+          customNameInput.focus();
+          return;
+        }
+      }
+
+      const size = sizeInput.value;
+      const price = parseFloat(priceInput.value) || 0;
+      const qty = parseInt(qtyInput.value) || 1;
+
+      if (price < 0 || qty < 1) {
+        notify("Invalid unit price or quantity.", true);
+        return;
+      }
+
+      // Check duplicate
+      const existing = cart.find(i => i.name === name && i.size === size && i.price === price);
+      if (existing) {
+        existing.qty += qty;
+        existing.total = existing.qty * existing.price;
+      } else {
+        cart.push({
+          name: name,
+          size: size,
+          price: price,
+          qty: qty,
+          total: price * qty
+        });
+      }
+
+      qtyInput.value = 1;
+      if (select.value === '__custom__') {
+        customNameInput.value = '';
+      }
+
+      renderCart();
+      calculateBillingTotals();
+    }
+
+    function removeCartItem(index) {
+      cart.splice(index, 1);
+      renderCart();
+      calculateBillingTotals();
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cartItemsContainer');
+      const badge = document.getElementById('cartUnitsLabel');
+      const totalUnits = cart.reduce((sum, item) => sum + item.qty, 0);
+
+      badge.textContent = `${totalUnits} ${totalUnits === 1 ? 'bottle' : 'bottles'}`;
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-3 text-xs text-slate-500 border border-dashed border-slate-800 rounded-lg">
+            No items added yet. Click "+ Add Item" above.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = cart.map((item, idx) => `
+        <div class="flex items-center justify-between bg-slate-800/80 p-2 rounded-lg border border-slate-700/60 text-xs">
+          <div class="overflow-hidden pr-2">
+            <span class="font-semibold text-slate-100 truncate block">${item.name}</span>
+            <span class="text-[10px] text-brand-gold">${item.size} • ৳${formatBDT(item.price)} × ${item.qty}</span>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-bold text-white font-mono">৳${formatBDT(item.total)}</span>
+            <button type="button" onclick="removeCartItem(${idx})" class="text-slate-400 hover:text-red-400 p-1">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function calculateBillingTotals() {
+      const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
+      const discountInput = document.getElementById('orderDiscount');
+      let discount = parseFloat(discountInput.value) || 0;
+
+      if (discount > subtotal) {
+        discount = subtotal;
+        discountInput.value = discount;
+      }
+
+      const grandTotal = Math.max(0, subtotal - discount);
+
+      document.getElementById('labelSubtotal').textContent = `৳ ${formatBDT(subtotal)}`;
+      document.getElementById('labelGrandTotal').textContent = `৳ ${formatBDT(grandTotal)}`;
+    }
+
+    // ================= 4. ORDER SUBMISSION & LOCALSTORAGE =================
+    function getStoredOrders() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveOrdersList(orders) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+      renderOrdersTable();
+      updateMetrics();
+    }
+
+    async function handleOrderSubmission(event) {
+      event.preventDefault();
+
+      if (cart.length === 0) {
+        notify("Please add at least one perfume to the order.", true);
+        return;
+      }
+
+      const custName = document.getElementById('custName').value.trim();
+      const custPhone = document.getElementById('custPhone').value.trim();
+      const custAddress = document.getElementById('custAddress').value.trim();
+      const paymentMethod = document.querySelector('input[name="orderPayment"]:checked').value;
+      const discount = parseFloat(document.getElementById('orderDiscount').value) || 0;
+      
+      const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
+      const grandTotal = Math.max(0, subtotal - discount);
+
+      const now = new Date();
+      const orderId = `ELV-${Math.floor(1000 + Math.random() * 9000)}`;
+      const dateStr = now.toLocaleDateString('en-GB');
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      const newOrder = {
+        id: orderId,
+        timestamp: now.toISOString(),
+        date: dateStr,
+        time: timeStr,
+        customer: {
+          name: custName,
+          phone: custPhone,
+          address: custAddress || 'Store Counter Sale'
+        },
+        items: [...cart],
+        subtotal: subtotal,
+        discount: discount,
+        grandTotal: grandTotal,
+        paymentMethod: paymentMethod
+      };
+
+      // 1. Save to browser LocalStorage
+      const orders = getStoredOrders();
+      orders.unshift(newOrder);
+      saveOrdersList(orders);
+
+      // 2. Automatically write directly to desktop Excel file (if linked)
+      await appendOrderToDesktopExcel(newOrder);
+
+      // 3. Reset order entry form
+      document.getElementById('orderForm').reset();
+      cart = [];
+      renderCart();
+      calculateBillingTotals();
+      document.getElementById('itemFragranceSelect').value = 'Vampire Blood';
+      document.getElementById('itemPrice').value = '190';
+      toggleCustomPerfumeField();
+
+      notify(`Order ${orderId} logged successfully!`);
+
+      // 4. Open 80mm POS Thermal Slip Preview
+      openReceiptModal(orderId);
+    }
+
+    // ================= 5. METRICS & SALES FEED TABLE =================
+    function updateMetrics() {
+      const orders = getStoredOrders();
+      const todayString = new Date().toDateString();
+
+      let count = 0;
+      let revenue = 0;
+      let cash = 0;
+      let digital = 0;
+
+      orders.forEach(o => {
+        if (new Date(o.timestamp).toDateString() === todayString) {
+          count++;
+          revenue += o.grandTotal;
+          if (o.paymentMethod === 'Cash') {
+            cash += o.grandTotal;
+          } else {
+            digital += o.grandTotal;
+          }
+        }
+      });
+
+      document.getElementById('statTodayOrders').textContent = count;
+      document.getElementById('statTodayRevenue').textContent = `৳ ${formatBDT(revenue)}`;
+      document.getElementById('statCashTotal').textContent = `৳ ${formatBDT(cash)}`;
+      document.getElementById('statDigitalTotal').textContent = `৳ ${formatBDT(digital)}`;
+    }
+
+    function renderOrdersTable() {
+      const orders = getStoredOrders();
+      const query = (document.getElementById('tableSearchQuery').value || '').toLowerCase().trim();
+      const tableBody = document.getElementById('ordersTableBody');
+      const countLabel = document.getElementById('recordCountLabel');
+
+      const filtered = orders.filter(o => {
+        if (!query) return true;
+        const nameMatch = o.customer.name.toLowerCase().includes(query);
+        const phoneMatch = o.customer.phone.includes(query);
+        const idMatch = o.id.toLowerCase().includes(query);
+        const itemMatch = o.items.some(i => i.name.toLowerCase().includes(query));
+        return nameMatch || phoneMatch || idMatch || itemMatch;
+      });
+
+      countLabel.textContent = `Showing ${filtered.length} of ${orders.length} orders`;
+
+      if (filtered.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-8 text-slate-500">
+              <i class="fa-solid fa-receipt text-2xl mb-1 text-slate-600 block"></i>
+              No orders found matching query.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = filtered.map(order => {
+        const itemsSummary = order.items.map(i => `${i.name} (x${i.qty})`).join(', ');
+
+        let payClass = 'bg-slate-800 text-slate-300 border-slate-700';
+        if (order.paymentMethod === 'Cash') payClass = 'bg-emerald-950/60 text-emerald-400 border-emerald-800';
+        else if (order.paymentMethod === 'bKash') payClass = 'bg-pink-950/60 text-pink-400 border-pink-800';
+        else if (order.paymentMethod === 'Nagad') payClass = 'bg-orange-950/60 text-orange-400 border-orange-800';
+        else if (order.paymentMethod === 'Card') payClass = 'bg-blue-950/60 text-blue-400 border-blue-800';
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition duration-150">
+            <td class="py-2.5 px-3 whitespace-nowrap">
+              <span class="font-mono font-bold text-brand-gold">${order.id}</span>
+              <div class="text-[10px] text-slate-400">${order.date}, ${order.time}</div>
+            </td>
+            <td class="py-2.5 px-3">
+              <div class="font-semibold text-slate-100">${order.customer.name}</div>
+              <div class="text-[10px] text-slate-400">${order.customer.phone}</div>
+            </td>
+            <td class="py-2.5 px-3 max-w-[190px]">
+              <div class="truncate text-slate-300 text-[11px]" title="${itemsSummary}">${itemsSummary}</div>
+            </td>
+            <td class="py-2.5 px-3 whitespace-nowrap">
+              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${payClass}">
+                ${order.paymentMethod}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+              <span class="font-bold text-white font-mono text-xs">৳${formatBDT(order.grandTotal)}</span>
+            </td>
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+              <button onclick="openReceiptModal('${order.id}')" title="Print 80mm POS Slip" class="p-1.5 rounded-md bg-slate-800 hover:bg-brand-gold hover:text-brand-dark text-slate-300 transition duration-150">
+                <i class="fa-solid fa-print"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ================= 6. 80mm RECEIPT MODAL & PRINTING =================
+    function buildReceiptHTML(order) {
+      const itemRows = order.items.map(item => `
+        <div style="display:flex; justify-content:space-between; margin-bottom: 3px;">
+          <div style="max-width: 65%;">
+            <strong>${item.name}</strong><br>
+            <span style="font-size:10px; color:#444;">${item.size} (${item.qty} × ৳${item.price})</span>
+          </div>
+          <div style="text-align:right;">
+            <strong>৳${formatBDT(item.total)}</strong>
+          </div>
+        </div>
+      `).join('');
+
+      return `
+        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px;">
+          <h2 style="font-size: 16px; font-weight: bold; margin: 0; text-transform: uppercase; letter-spacing: 1.5px;">ELVAREN</h2>
+          <p style="font-size: 10px; margin: 2px 0;">Artisanal Perfumes & Attar Oils</p>
+          <p style="font-size: 10px; margin: 0;">Outlet POS & Sales Hub</p>
+        </div>
+
+        <div style="font-size: 11px; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 6px;">
+          <div style="display:flex; justify-content:space-between;">
+            <span>Inv #: <strong>${order.id}</strong></span>
+            <span>${order.time}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>Date: ${order.date}</span>
+            <span>Pay: <strong>${order.paymentMethod}</strong></span>
+          </div>
+          <div style="margin-top: 4px;">
+            <span>Customer: <strong>${order.customer.name}</strong></span><br>
+            <span>Phone: ${order.customer.phone}</span><br>
+            <span>Address: ${order.customer.address}</span>
+          </div>
+        </div>
+
+        <div style="border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
+          <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11px; margin-bottom:4px;">
+            <span>Fragrance Item</span>
+            <span>Total</span>
+          </div>
+          ${itemRows}
+        </div>
+
+        <div style="font-size: 11px; line-height: 1.4; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 6px;">
+          <div style="display:flex; justify-content:space-between;">
+            <span>Subtotal:</span>
+            <span>৳${formatBDT(order.subtotal)}</span>
+          </div>
+          ${order.discount > 0 ? `
+          <div style="display:flex; justify-content:space-between;">
+            <span>Discount:</span>
+            <span>- ৳${formatBDT(order.discount)}</span>
+          </div>` : ''}
+          <div style="display:flex; justify-content:space-between; font-size: 13px; font-weight: bold; margin-top: 4px;">
+            <span>Grand Total:</span>
+            <span>৳${formatBDT(order.grandTotal)}</span>
+          </div>
+        </div>
+
+        <div style="text-align: center; font-size: 10px; color: #444;">
+          <p style="margin: 2px 0;">* Thank you for choosing Elvaren *</p>
+          <p style="margin: 2px 0;">Store perfume in a cool & dark environment.</p>
+        </div>
+      `;
+    }
+
+    function openReceiptModal(orderId) {
+      const orders = getStoredOrders();
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      currentReceiptOrder = order;
+      document.getElementById('receiptPreviewBox').innerHTML = buildReceiptHTML(order);
+      document.getElementById('receiptModal').classList.remove('hidden');
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').classList.add('hidden');
+      currentReceiptOrder = null;
+    }
+
+    function printThermalReceipt() {
+      if (!currentReceiptOrder) return;
+      const printArea = document.getElementById('printArea');
+      printArea.innerHTML = buildReceiptHTML(currentReceiptOrder);
+      printArea.classList.remove('hidden');
+
+      window.print();
+
+      setTimeout(() => {
+        printArea.classList.add('hidden');
+      }, 500);
+    }
+
+    // ================= 7. MANUAL EXCEL CSV EXPORT FALLBACK =================
+    function exportToCSV() {
+      const orders = getStoredOrders();
+      if (orders.length === 0) {
+        notify("No order records to export.", true);
+        return;
+      }
+
+      const headers = ["Order ID", "Date", "Time", "Customer Name", "Customer Phone", "Delivery Address", "Fragrance Items", "Subtotal (BDT)", "Discount (BDT)", "Grand Total (BDT)", "Payment Method"];
+
+      const rows = orders.map(order => {
+        const itemsStr = order.items.map(i => `${i.name} [${i.size}] x${i.qty} (৳${i.total})`).join('; ');
+        return [
+          `"${order.id}"`,
+          `"${order.date}"`,
+          `"${order.time}"`,
+          `"${order.customer.name.replace(/"/g, '""')}"`,
+          `"${order.customer.phone}"`,
+          `"${(order.customer.address || '').replace(/"/g, '""')}"`,
+          `"${itemsStr.replace(/"/g, '""')}"`,
+          order.subtotal,
+          order.discount,
+          order.grandTotal,
+          `"${order.paymentMethod}"`
+        ];
+      });
+
+      const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(e => e.join(','))].join("\r\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Elvaren_Orders_Backup_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      notify("Manual CSV exported successfully!");
+    }
+
+    // Initialize Default Demo Data if fresh
+    function seedInitialData() {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        const sampleOrders = [
+          {
+            id: 'ELV-1021',
+            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleDateString('en-GB'),
+            time: '04:15 PM',
+            customer: { name: 'Saimon Chowdhury', phone: '01812345678', address: 'GEC Circle, Chattogram' },
+            items: [
+              { name: 'Vampire Blood', size: '6ml Roll-on Attar', price: 190, qty: 1, total: 190 },
+              { name: 'Creed Aventus', size: '30ml Pocket EDP', price: 190, qty: 1, total: 190 }
+            ],
+            subtotal: 380,
+            discount: 0,
+            grandTotal: 380,
+            paymentMethod: 'Cash'
+          }
+        ];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleOrders));
+      }
+    }
+
+    // App Startup
+    window.onload = function() {
+      checkAuthentication();
+      seedInitialData();
+      renderOrdersTable();
+      updateMetrics();
+
+      const dateEl = document.getElementById('currentDateIndicator');
+      dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    };
+  </script>
+</body>
+</html>
